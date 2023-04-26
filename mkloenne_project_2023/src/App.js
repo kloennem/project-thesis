@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 // import { SimpleStorage } from "./abi/abi"; // todo: change contract name
 import Web3 from "web3";
+import BigNumber from "bignumber.js"
 import './App.css';
 
 // Access our wallet inside of our dapp
@@ -35,9 +36,9 @@ function App() {
   const numberGet = async (t) => {
     t.preventDefault();
 //     const post = await storageContract.methods.get().call();
-//     const post2 = parseInt(post, 10).toString(16)
-//     setGet(post2);
-    setGet(number)
+//     const post2 = BigNumber(post, 10).toString(16)
+    const post2 = number.toString(16)
+    setGet(post2);
   };
 
   const callSetAcc = async (t) => {
@@ -49,6 +50,7 @@ function App() {
 
   const setDestAddr = async (t) => {
     document.getElementById("destAddr").value = acc
+    setUint(BigNumber(document.getElementById("destAddr").value, 16))
   };
   
   return (
@@ -63,7 +65,6 @@ function App() {
                className="input"
                type="text"
                name="name"
-               onChange={(t) => setUint(parseInt(t.target.value, 16))}
              />
            </label>
          </form>
@@ -123,7 +124,7 @@ function App() {
                    type="text"
                    name="name"
                    id="destAddr"
-                   onChange={(t) => setUint(parseInt(t.target.value, 16))}
+                   onChange={(t) => setUint(BigNumber(t.target.value, 16))}
                  />
                </label>
                <button className="button" type="submit" value="Confirm" onClick={numberSet}>
@@ -135,7 +136,7 @@ function App() {
                Get your hex
              </button>
              <br />
-             {getNumber}
+             0x{getNumber}
            </div>
          </div>
        </div>
