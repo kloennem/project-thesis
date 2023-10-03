@@ -54,87 +54,93 @@ function App() {
   };
   
   return (
-     <div className="main">
-        <div className="row">
+    <div className="main">
+      
+      {/* source address */}
+      <div className="row">
         <form className="form">
-               <label>
-                 Source address:
-                 <br />
-                 {acc}
-               </label>
-               <button className="button" type="submit" onClick={callSetAcc}>
-                 Reload source address
-               </button>
-             </form>
-             </div>
-       <div className="card">
-         <br />
-         <div className="row">
-                <div class="box">
-             <form className="form" style={{"float":"left"}}>
-                <label>
-                    Choose source Blockchain:
-                </label>
-               <select name="chains" style={{"width":"300px"}}>
-                  <option selected="selected" value="goerli">Görli</option>
-                  <option value="sepolia">Sepolia</option>
-               </select>
-             </form>
-             <form className="form" style={{"float":"right"}}>
-                <label>
-                    Choose destination Blockchain:
-                </label>
-               <select name="chains" style={{"width":"300px"}}>
-                  <option selected="selected" value="goerli">Görli</option>
-                  <option value="sepolia">Sepolia</option>
-               </select>
-             </form>
-               </div>
-             </div>
+          <label>
+            Source address:
+            <br />
+            {acc}
+          </label>
+          <button className="button" type="submit" onClick={callSetAcc}>
+            Reload source address
+          </button>
+        </form>
+      </div>
+      
+      {/* blockchains */}
+      <div className="card">
+        <div className="row">
+          <div class="box">
+            <form className="form" style={{"float":"left"}}>
+              <label>
+                Choose source Blockchain:
+              </label>
+              <select name="chains" style={{"width":"300px"}}>
+                <option selected="selected" value="goerli">Görli</option>
+                <option value="sepolia">Sepolia</option>
+              </select>
+            </form>
+            <form className="form" style={{"float":"right"}}>
+              <label>
+                Choose destination Blockchain:
+              </label>
+              <select name="chains" style={{"width":"300px"}}>
+                <option selected="selected" value="goerli">Görli</option>
+                <option value="sepolia">Sepolia</option>
+              </select>
+            </form>
+          </div>
+        </div>
 
-            <div className="row">
-                <div class="box">
-             <form className="form" style={{"float":"left"}}>
-               <label>
-                 Set destination address:
-                 <br />
-                 <input
-                   className="input"
-                   type="text"
-                   style={{"width":"250px"}}
-                   name="name"
-                   id="destAddr"
-                   onChange={(t) => setUint(BigNumber(t.target.value, 16))}
-                 />
-               </label>
-               </form>
-             <button className="button" type="submit" onClick={setDestAddr} style={{"float":"right"}}>Same as source address</button>
-               </div>
-             </div>
-               <div className="row">
-            <div class="box">
-         <form className="form">
-           <label>
-             Set ETH amount to be sent:
-             <br />
-             <input
+        {/* destination address */}
+        <div className="row">
+          <div class="box">
+            <form className="form" style={{"float":"left"}}>
+              <label>
+                Set destination address:
+              </label>
+              <input
+                className="input"
+                type="text"
+                style={{"width":"250px"}}
+                name="name"
+                id="destAddr"
+                onChange={(t) => setUint(BigNumber(t.target.value, 16))}
+                />
+            </form>
+            <button className="button" type="submit" onClick={setDestAddr} style={{"float":"right"}}>Same as source address</button>
+          </div>
+        </div>
+
+        {/* token type and amount */}
+        <div className="row">
+          <div class="box">
+            <form className="form">
+              <label>
+                Set token amount to be sent:
+              </label>
+              <input
                className="input"
                type="text"
                name="name"
-             />
-           </label>
-         </form>
-           </div>
-         </div>
-             <div className="row">
-             <form className="form">
-             <button className="button" onClick={numberGet} style={{"width":"500px"}} type="button">
-               Start Transaction
-             </button>
-             </form>
-         </div>
-       </div>
-     </div>
+              />
+            </form>
+          </div>
+        </div>
+        
+        {/* start transaction button */}
+        <div className="row">
+          <form className="form">
+            <button className="button" onClick={numberGet} style={{"width":"500px"}} type="button">
+              Start Transaction
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 }
 
