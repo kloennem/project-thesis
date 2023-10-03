@@ -17,20 +17,14 @@
 
 .form {
 	height: 10vh;
-	display: flex;
-	justify-content: space-evenly;
-	flex-direction: column;
-}
-
-.form2 {
-	height: 20vh;
+    width: 40vh;
 	display: flex;
 	justify-content: space-evenly;
 	flex-direction: column;
 }
 
 .button {
-	width: 20vw;
+	width: vw;
 	height: 5vh;
     align-self: center;
 }
@@ -53,3 +47,19 @@
 .vl {
     border-left: 1px solid;
   }
+.box {
+    margin: 5px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.2);
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    flex-direction: row;
+}
+.box:before {
+    content: "";
+    position:absolute;
+    top: -30px;
+    left: 50px;
+    border: 15px solid transparent;
+    border-bottom-color: white;
+}

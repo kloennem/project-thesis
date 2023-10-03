@@ -55,8 +55,64 @@ function App() {
   
   return (
      <div className="main">
+        <div className="row">
+        <form className="form">
+               <label>
+                 Source address:
+                 <br />
+                 {acc}
+               </label>
+               <button className="button" type="submit" onClick={callSetAcc}>
+                 Reload source address
+               </button>
+             </form>
+             </div>
        <div className="card">
+         <br />
          <div className="row">
+                <div class="box">
+             <form className="form" style={{"float":"left"}}>
+                <label>
+                    Choose source Blockchain:
+                </label>
+               <select name="chains" style={{"width":"300px"}}>
+                  <option selected="selected" value="goerli">Görli</option>
+                  <option value="sepolia">Sepolia</option>
+               </select>
+             </form>
+             <form className="form" style={{"float":"right"}}>
+                <label>
+                    Choose destination Blockchain:
+                </label>
+               <select name="chains" style={{"width":"300px"}}>
+                  <option selected="selected" value="goerli">Görli</option>
+                  <option value="sepolia">Sepolia</option>
+               </select>
+             </form>
+               </div>
+             </div>
+
+            <div className="row">
+                <div class="box">
+             <form className="form" style={{"float":"left"}}>
+               <label>
+                 Set destination address:
+                 <br />
+                 <input
+                   className="input"
+                   type="text"
+                   style={{"width":"250px"}}
+                   name="name"
+                   id="destAddr"
+                   onChange={(t) => setUint(BigNumber(t.target.value, 16))}
+                 />
+               </label>
+               </form>
+             <button className="button" type="submit" onClick={setDestAddr} style={{"float":"right"}}>Same as source address</button>
+               </div>
+             </div>
+               <div className="row">
+            <div class="box">
          <form className="form">
            <label>
              Set ETH amount to be sent:
@@ -68,76 +124,14 @@ function App() {
              />
            </label>
          </form>
+           </div>
          </div>
-         <br />
-         <div className="row">
-           <div className="column">
-           <hr />
+             <div className="row">
              <form className="form">
-                <label>
-                    Choose source Blockchain:
-                </label>
-               <select name="chains">
-                  <option selected="selected" value="goerli">Görli</option>
-                  <option value="sepolia">Sepolia</option>
-               </select>
-             </form>
-             <hr />
-             <form className="form2">
-               <label>
-                 Source address:
-                 <br />
-                 {acc}
-               </label>
-               <button className="button" type="submit" onClick={callSetAcc}>
-                 Reload source address
-               </button>
-             </form>
-             <br />
-             <input
-                 className="input"
-                 type="text"
-                 name="helper"
-                 id="helper"
-               />
-           </div>
-           <div className="vl"></div>
-           <div className="column">
-           <hr />
-             <form className="form">
-                <label>
-                    Choose destination Blockchain:
-                </label>
-               <select name="chains">
-                  <option selected="selected" value="goerli">Görli</option>
-                  <option value="sepolia">Sepolia</option>
-               </select>
-             </form>
-             <hr />
-             <button className="button2" type="submit" onClick={setDestAddr}>Destination address equal to source address</button>
-             <form className="form2">
-               <label>
-                 Set destination address:
-                 <br />
-                 <input
-                   className="input"
-                   type="text"
-                   name="name"
-                   id="destAddr"
-                   onChange={(t) => setUint(BigNumber(t.target.value, 16))}
-                 />
-               </label>
-               <button className="button" type="submit" value="Confirm" onClick={numberSet}>
-                 Confirm
-               </button>
-             </form>
-             <hr />
-             <button className="button" onClick={numberGet} type="button">
-               Get your hex
+             <button className="button" onClick={numberGet} style={{"width":"500px"}} type="button">
+               Start Transaction
              </button>
-             <br />
-             0x{getNumber}
-           </div>
+             </form>
          </div>
        </div>
      </div>
