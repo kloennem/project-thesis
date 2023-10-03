@@ -57,7 +57,7 @@ function App() {
     <div className="main">
       
       {/* source address */}
-      <div className="row">
+      <div className="row" style={{"width":"40vw"}}>
         <form className="form">
           <label>
             Source address:
@@ -70,9 +70,10 @@ function App() {
         </form>
       </div>
       
-      {/* blockchains */}
       <div className="card">
-        <div className="row">
+
+        {/* blockchains */}
+        <div className="row" style={{"width":"80vw"}}>
           <div class="box">
             <form className="form" style={{"float":"left"}}>
               <label>
@@ -96,7 +97,7 @@ function App() {
         </div>
 
         {/* destination address */}
-        <div className="row">
+        <div className="row" style={{"width":"76vw"}}>
           <div class="box">
             <form className="form" style={{"float":"left"}}>
               <label>
@@ -116,7 +117,7 @@ function App() {
         </div>
 
         {/* token type and amount */}
-        <div className="row">
+        <div className="row" style={{"width":"61vw"}}>
           <div class="box">
             <form className="form">
               <label>
@@ -132,7 +133,7 @@ function App() {
         </div>
         
         {/* start transaction button */}
-        <div className="row">
+        <div className="row" style={{"width":"56vw"}}>
           <form className="form">
             <button className="button" onClick={numberGet} style={{"width":"500px"}} type="button">
               Start Transaction
