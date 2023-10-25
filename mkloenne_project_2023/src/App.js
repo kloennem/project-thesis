@@ -6,15 +6,15 @@ import BigNumber from "bignumber.js"
 import './App.css';
 
 const RLP = require('rlp');
-// const {BaseTrie: Trie} = require('merkle-patricia-tree');
-// const {
-//     asyncTriePut,
-//     newTrie,
-//     createRLPHeader,
-//     createRLPTransaction,
-//     createRLPReceipt,
-//     encodeToBuffer
-//  } = require('./utils');
+const {BaseTrie: Trie} = require('merkle-patricia-tree');
+const {
+    asyncTriePut,
+    newTrie,
+    createRLPHeader,
+    createRLPTransaction,
+    createRLPReceipt,
+    encodeToBuffer
+ } = require('./utils');
 
 // Access our wallet inside of our dapp
 const web3 = new Web3(Web3.givenProvider);
@@ -35,8 +35,6 @@ const transferContract1 = new ethers.Contract(protocol2Address1, Protocol2, sign
 const transferContract2 = new ethers.Contract(protocol2Address2, Protocol2, signer);
 
 const verilayContract = new ethers.Contract(verilayAddress, Verilay, signer);
-
-// const storageContract = new web3.eth.Contract(SimpleStorage, contractAddress); // todo: change variable names, contract name
 
 function App() {
   // Hold variables that will interact with our contract and frontend
@@ -63,49 +61,49 @@ function App() {
   };
 
   const claimTokens = async (t) => {
-    // t.preventDefault();
-    // const block             = await web3.eth.getBlock(burned.blockHash);
-    // const tx                = await web3.eth.getTransaction(burned.hash);
-    // const txReceipt         = await web3.eth.getTransactionReceipt(burned.hash);
-    // const rlpHeader         = createRLPHeader(block);
-    // const rlpEncodedTx      = createRLPTransaction(tx);
-    // const rlpEncodedReceipt = createRLPReceipt(txReceipt);
+    t.preventDefault();
+    const block             = await web3.eth.getBlock(burned.blockHash);
+    const tx                = await web3.eth.getTransaction(burned.hash);
+    const txReceipt         = await web3.eth.getTransactionReceipt(burned.hash);
+    const rlpHeader         = createRLPHeader(block);
+    const rlpEncodedTx      = createRLPTransaction(tx);
+    const rlpEncodedReceipt = createRLPReceipt(txReceipt);
 
-    // const path = encodeToBuffer(tx.transactionIndex);
-    // const rlpEncodedTxNodes = await createTxMerkleProof(block, tx.transactionIndex);
-    // const rlpEncodedReceiptNodes = await createReceiptMerkleProof(block, tx.transactionIndex);
+    const path = encodeToBuffer(tx.transactionIndex);
+    const rlpEncodedTxNodes = await createTxMerkleProof(block, tx.transactionIndex);
+    const rlpEncodedReceiptNodes = await createReceiptMerkleProof(block, tx.transactionIndex);
     
-    // const claimResult = await transferContract2.claim(rlpHeader, rlpEncodedTx, rlpEncodedReceipt, rlpEncodedTxNodes, rlpEncodedReceiptNodes, path);
-    // await claimResult.wait();
+    const claimResult = await transferContract2.claim(rlpHeader, rlpEncodedTx, rlpEncodedReceipt, rlpEncodedTxNodes, rlpEncodedReceiptNodes, path);
+    await claimResult.wait();
   };
 
-//   const createTxMerkleProof = async (block, transactionIndex) => {
-//     const trie = newTrie();
+  const createTxMerkleProof = async (block, transactionIndex) => {
+    const trie = newTrie();
 
-//     for (let i=0; i<block.transactions.length; i++) {
-//        const tx = await web3.eth.getTransaction(block.transactions[i]);
-//        const rlpTx = createRLPTransaction(tx);
-//        const key = RLP.encode(i);
-//        await asyncTriePut(trie, key, rlpTx);
-//     }
+    for (let i=0; i<block.transactions.length; i++) {
+       const tx = await web3.eth.getTransaction(block.transactions[i]);
+       const rlpTx = createRLPTransaction(tx);
+       const key = RLP.encode(i);
+       await asyncTriePut(trie, key, rlpTx);
+    }
 
-//     const key = RLP.encode(transactionIndex);
-//     return encodeToBuffer(await Trie.createProof(trie, key));
-//    };
+    const key = RLP.encode(transactionIndex);
+    return encodeToBuffer(await Trie.createProof(trie, key));
+   };
 
-//    const createReceiptMerkleProof = async (block, transactionIndex) => {
-//     const trie = newTrie();
+   const createReceiptMerkleProof = async (block, transactionIndex) => {
+    const trie = newTrie();
 
-//     for (let i=0; i<block.transactions.length; i++) {
-//        const receipt = await web3.eth.getTransactionReceipt(block.transactions[i]);
-//        const rlpReceipt = createRLPReceipt(receipt);
-//        const key = RLP.encode(i);
-//        await asyncTriePut(trie, key, rlpReceipt);
-//     }
+    for (let i=0; i<block.transactions.length; i++) {
+       const receipt = await web3.eth.getTransactionReceipt(block.transactions[i]);
+       const rlpReceipt = createRLPReceipt(receipt);
+       const key = RLP.encode(i);
+       await asyncTriePut(trie, key, rlpReceipt);
+    }
 
-//     const key = RLP.encode(transactionIndex);
-//     return encodeToBuffer(await Trie.createProof(trie, key));
-//   }
+    const key = RLP.encode(transactionIndex);
+    return encodeToBuffer(await Trie.createProof(trie, key));
+  }
 
   const numberSet = async (t) => {
     document.getElementById("helper").value = number
