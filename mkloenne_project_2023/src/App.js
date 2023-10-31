@@ -38,103 +38,112 @@ const verilayContract = new ethers.Contract(verilayAddress, Verilay, signer);
 
 function App() {
   // Hold variables that will interact with our contract and frontend
-  const [number, setUint] = useState(0);
-  const [recipientAddress, setRecipientAddress] = useState(0);
-  const [burned, setBurned] = useState(0);
-  const [getNumber, setGet] = useState("0");
-  const [acc, setAcc] = useState(window.ethereum.enable()[0])
+  const [recipientAddress, setRecipientAddress] = useState(0);      // recipient address
+  const [burned, setBurned] = useState(0);                          // address of burn result
+  const [acc, setAcc] = useState(0)                                 // source address
 
-  useEffect(() => {
-    callSetAcc();
-  });
+//   useEffect(() => {
+//     callSetAcc();
+//   });
   
   const callSetAcc = async (t) => {
+    t.preventDefault();
     const account = (await provider.send('eth_requestAccounts'))[0];
     setAcc(account)
   };
 
-  const burnTokens = async (t) => {
+  const startTransaction = async (t) => {
     t.preventDefault();
-    const burnResult = await transferContract1.burn(recipientAddress, protocol2Address2, 2, 0)
-    await burnResult.wait();
-    setBurned(burnResult);
+    await getBalance();
+    await burnTokens();
+    setTimeout(emptyTimeoutFunction,10000);
+    await claimTokens();
   };
-
-  const claimTokens = async (t) => {
-    t.preventDefault();
-    const block             = await web3.eth.getBlock(burned.blockHash);
-    const tx                = await web3.eth.getTransaction(burned.hash);
-    const txReceipt         = await web3.eth.getTransactionReceipt(burned.hash);
-    const rlpHeader         = createRLPHeader(block);
+  
+  const getBalance = async (t) => {
+      // t.preventDefault();    
+      const balance110 = await transferContract1.balanceOf(acc)
+      const balance210 = await transferContract2.balanceOf(acc)
+      const balance220 = await transferContract2.balanceOf(recipientAddress)
+      document.getElementById("helper").value = balance110
+      document.getElementById("helper1").value = balance210
+      document.getElementById("helper2").value = balance220
+    };
+    
+    const burnTokens = async (t) => {
+        // t.preventDefault();
+        const burnResult = await transferContract1.burn(recipientAddress, protocol2Address2, 2, 0)
+        await burnResult.wait();
+        setBurned(burnResult);
+        const balance111 = await transferContract1.balanceOf(acc)
+        const balance211 = await transferContract2.balanceOf(acc)
+        const balance221 = await transferContract2.balanceOf(recipientAddress)
+        document.getElementById("helper").value = balance111
+        document.getElementById("helper1").value = balance211
+        document.getElementById("helper2").value = balance221
+    };
+    
+    const claimTokens = async (t) => {
+        // t.preventDefault();
+        const block             = await web3.eth.getBlock(burned.blockHash);
+        const tx                = await web3.eth.getTransaction(burned.hash);
+        const txReceipt         = await web3.eth.getTransactionReceipt(burned.hash);
+        const rlpHeader         = createRLPHeader(block);
     const rlpEncodedTx      = createRLPTransaction(tx);
     const rlpEncodedReceipt = createRLPReceipt(txReceipt);
-
+    
     const path = encodeToBuffer(tx.transactionIndex);
     const rlpEncodedTxNodes = await createTxMerkleProof(block, tx.transactionIndex);
     const rlpEncodedReceiptNodes = await createReceiptMerkleProof(block, tx.transactionIndex);
     
     const claimResult = await transferContract2.claim(rlpHeader, rlpEncodedTx, rlpEncodedReceipt, rlpEncodedTxNodes, rlpEncodedReceiptNodes, path);
     await claimResult.wait();
-  };
+    const balance112 = await transferContract1.balanceOf(acc)
+    const balance212 = await transferContract2.balanceOf(acc)
+    const balance222 = await transferContract2.balanceOf(recipientAddress)
+    document.getElementById("helper").value = balance112
+    document.getElementById("helper1").value = balance212
+    document.getElementById("helper2").value = balance222
+};
 
-  const createTxMerkleProof = async (block, transactionIndex) => {
+const createTxMerkleProof = async (block, transactionIndex) => {
     const trie = newTrie();
 
     for (let i=0; i<block.transactions.length; i++) {
-       const tx = await web3.eth.getTransaction(block.transactions[i]);
-       const rlpTx = createRLPTransaction(tx);
-       const key = RLP.encode(i);
-       await asyncTriePut(trie, key, rlpTx);
+        const tx = await web3.eth.getTransaction(block.transactions[i]);
+        const rlpTx = createRLPTransaction(tx);
+        const key = RLP.encode(i);
+        await asyncTriePut(trie, key, rlpTx);
     }
-
+    
     const key = RLP.encode(transactionIndex);
     return encodeToBuffer(await Trie.createProof(trie, key));
    };
-
+   
    const createReceiptMerkleProof = async (block, transactionIndex) => {
-    const trie = newTrie();
-
-    for (let i=0; i<block.transactions.length; i++) {
-       const receipt = await web3.eth.getTransactionReceipt(block.transactions[i]);
-       const rlpReceipt = createRLPReceipt(receipt);
-       const key = RLP.encode(i);
-       await asyncTriePut(trie, key, rlpReceipt);
+       const trie = newTrie();
+       
+       for (let i=0; i<block.transactions.length; i++) {
+           const receipt = await web3.eth.getTransactionReceipt(block.transactions[i]);
+           const rlpReceipt = createRLPReceipt(receipt);
+           const key = RLP.encode(i);
+           await asyncTriePut(trie, key, rlpReceipt);
+        }
+        
+        const key = RLP.encode(transactionIndex);
+        return encodeToBuffer(await Trie.createProof(trie, key));
     }
-
-    const key = RLP.encode(transactionIndex);
-    return encodeToBuffer(await Trie.createProof(trie, key));
-  }
-
-  const numberSet = async (t) => {
-    document.getElementById("helper").value = number
-    t.preventDefault();
-    const accounts = await window.ethereum.enable();
-    const account = accounts[0];
-    setAcc(account)
-    // Get permission to access user funds to pay for gas fees
-    // const gas = await storageContract.methods.set(number).estimateGas();
-    // const post = await storageContract.methods.set(number).send({
-    //   from: account,
-    //   gas,
-    // });
-  };
-
-  const numberGet = async (t) => {
-    t.preventDefault();
-//     const post = await storageContract.methods.get().call();
-//     const post2 = BigNumber(post, 10).toString(16)
-    const post2 = number.toString(16)
-    setGet(post2);
-  };
-
-
-  const setDestAddr = async (t) => {
-    document.getElementById("destAddr").value = acc
-    setUint(BigNumber(document.getElementById("destAddr").value, 16))
-  };
+    
+    
+    const setDestAddr = async (t) => {
+        document.getElementById("destAddr").value = acc
+        setRecipientAddress(acc)
+    };
   
-  return (
-    <div className="main">
+    const emptyTimeoutFunction = async (t) => {}
+    
+    return (
+        <div className="main">
       
       {/* source address */}
       <div className="row" style={{"width":"40vw"}}>
@@ -189,7 +198,7 @@ function App() {
                 style={{"width":"250px"}}
                 name="name"
                 id="destAddr"
-                onChange={(t) => setUint(BigNumber(t.target.value, 16))}
+                onChange={(t) => setDestAddr}
                 />
             </form>
             <button className="button" type="submit" onClick={setDestAddr} style={{"float":"right"}}>Same as source address</button>
@@ -223,10 +232,32 @@ function App() {
         {/* start transaction button */}
         <div className="row" style={{"width":"56vw"}}>
           <form className="form">
-            <button className="button" onClick={numberGet} style={{"width":"500px"}} type="button">
+            <button className="button" onClick={startTransaction} style={{"width":"500px"}} type="button">
               Start Transaction
             </button>
           </form>
+        </div>
+        <div className="row">
+        <input
+                 className="input"
+                 type="text"
+                 name="helper"
+                 id="helper"
+               />
+             <br />  
+             <input
+                 className="input"
+                 type="text"
+                 name="helper1"
+                 id="helper1"
+               />
+             <br />  
+             <input
+                 className="input"
+                 type="text"
+                 name="helper2"
+                 id="helper2"
+               />
         </div>
       </div>
     </div>
