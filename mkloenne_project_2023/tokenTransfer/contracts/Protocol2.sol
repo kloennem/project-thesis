@@ -44,6 +44,7 @@ contract Protocol2 is ERC20 {
     uint constant FAIR_CONFIRM_PERIOD = 45; // similar to FAIR_CLAIM_PERIOD but intended for confirm tx
 
     address immutable _trustedForwarder;
+    address sender;
 
     constructor(address[] memory tokenContracts, address txInclVerifier, uint initialSupply, address trustedForwarder) ERC20("TestToken", "TKN") {
         for (uint i = 0; i < tokenContracts.length; i++) {
@@ -81,7 +82,7 @@ contract Protocol2 is ERC20 {
         require(recipient != address(0), "recipient address must not be zero address");
         require(participatingTokenContracts[claimContract] == true, "claim contract address is not registered");
         require(stake == REQUIRED_STAKE, 'provided stake does not match required stake');
-        address sender = msgSender();
+        sender = msgSender();
         _burn(sender, value + stake);
         emit Burn(sender, recipient, claimContract, value);
     }
@@ -115,7 +116,7 @@ contract Protocol2 is ERC20 {
         uint fee = calculateFee(c.value, TRANSFER_FEE);
         uint remainingValue = c.value - fee;
         address feeRecipient = c.recipient;
-        address sender = msgSender();
+        sender = msgSender();
         if (sender != c.recipient && txInclusionVerifier.isBlockConfirmed(0, keccak256(rlpHeader), FAIR_CLAIM_PERIOD)) {
             // other client wants to claim fees
             // fair claim period has elapsed -> fees go to msg.sender

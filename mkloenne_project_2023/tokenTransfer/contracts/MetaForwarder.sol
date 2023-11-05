@@ -15,7 +15,7 @@ import "./Ownable.sol";
  * functioning forwarding system with good properties requires more complexity. We suggest you look at other projects
  * such as the GSN which do have the goal of building a system like that.
  */
-contract MetasForwarder is EIP712, Ownable {
+contract MetaForwarder is EIP712, Ownable {
     using ECDSA for bytes32;
 
     struct ForwardRequest {
