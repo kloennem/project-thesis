@@ -237,7 +237,7 @@ const createTxMerkleProof = async (block, transactionIndex) => {
             </button>
           </form>
         </div>
-        <div className="row">
+        <div className="row" style={{"width":"70vw"}}>
         <input
                  className="input"
                  type="text"

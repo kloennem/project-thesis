@@ -11,15 +11,6 @@ contract Protocol2 is ERC20 {
     using RLPReader for RLPReader.Iterator;
     using RLPReader for bytes;
 
-    uint256 storedData;
-
-    function set(uint256 x) public {
-        storedData = x;
-    }
-
-    function get() public view returns (uint256) {
-        return storedData;
-    }
 
     struct ClaimData {
         address burnContract;   // the contract which has burnt the tokens on the other blockchian
@@ -52,11 +43,14 @@ contract Protocol2 is ERC20 {
                                            // If the claim is posted after this period, the client submitting the claim gets the fees.
     uint constant FAIR_CONFIRM_PERIOD = 45; // similar to FAIR_CLAIM_PERIOD but intended for confirm tx
 
-    constructor(address[] memory tokenContracts, address txInclVerifier, uint initialSupply) ERC20("TestToken", "TKN") {
+    address immutable _trustedForwarder;
+
+    constructor(address[] memory tokenContracts, address txInclVerifier, uint initialSupply, address trustedForwarder) ERC20("TestToken", "TKN") {
         for (uint i = 0; i < tokenContracts.length; i++) {
             participatingTokenContracts[tokenContracts[i]] = true;
         }
         txInclusionVerifier = MockedTxInclusionVerifier(txInclVerifier);
+        _trustedForwarder = trustedForwarder;
         _mint(msg.sender, initialSupply);
     }
 
@@ -67,12 +61,29 @@ contract Protocol2 is ERC20 {
         participatingTokenContracts[tokenContract] = true;
     }
 
+    function isTrustedForwarder(address forwarder) public view returns(bool) {
+        return forwarder == _trustedForwarder;
+    }
+
+    function msgSender() internal view returns (address payable signer) {
+        signer = payable(msg.sender);
+        if (msg.data.length>=20 && isTrustedForwarder(signer)) {
+            assembly {
+                signer := shr(96,calldataload(sub(calldatasize(),20)))
+            }
+            return signer;
+        } else {
+            revert('invalid call');
+        }
+    }
+
     function burn(address recipient, address claimContract, uint value, uint stake) public {
         require(recipient != address(0), "recipient address must not be zero address");
         require(participatingTokenContracts[claimContract] == true, "claim contract address is not registered");
         require(stake == REQUIRED_STAKE, 'provided stake does not match required stake');
-        _burn(msg.sender, value + stake);
-        emit Burn(msg.sender, recipient, claimContract, value);
+        address sender = msgSender();
+        _burn(sender, value + stake);
+        emit Burn(sender, recipient, claimContract, value);
     }
 
     function claim(
@@ -104,10 +115,11 @@ contract Protocol2 is ERC20 {
         uint fee = calculateFee(c.value, TRANSFER_FEE);
         uint remainingValue = c.value - fee;
         address feeRecipient = c.recipient;
-        if (msg.sender != c.recipient && txInclusionVerifier.isBlockConfirmed(0, keccak256(rlpHeader), FAIR_CLAIM_PERIOD)) {
+        address sender = msgSender();
+        if (sender != c.recipient && txInclusionVerifier.isBlockConfirmed(0, keccak256(rlpHeader), FAIR_CLAIM_PERIOD)) {
             // other client wants to claim fees
             // fair claim period has elapsed -> fees go to msg.sender
-            feeRecipient = msg.sender;
+            feeRecipient = sender;
         }
 
         // mint fees to feeRecipient
