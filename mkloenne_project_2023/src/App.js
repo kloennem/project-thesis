@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import Web3 from "web3";
 import { ethers } from "ethers";
-import { Protocol2, Ethrelay, Verilay } from "./abi/abi"; 
+import axios from 'axios';
+import { Protocol2, Verilay, MetaForwarder } from "./abi/abi"; 
 import BigNumber from "bignumber.js"
 import './App.css';
+import { AbiCoder } from "ethers/lib/utils";
 
 const RLP = require('rlp');
 const {BaseTrie: Trie} = require('merkle-patricia-tree');
@@ -25,22 +27,28 @@ const signer = provider.getSigner();
 
 
 // Contract address of the deployed smart contract
-const protocol2Address1 = "0x9F7a9a6aD1f4f2EB779fD635181e2a3397bA47Fa" // for Görli
-const protocol2Address2 = "0xB61c9C2824c5d0f7a6B1D6A727904726Bf4872De" // for Görli
+const protocol2Address1 = "0x9c882Bb872C0A4b5f4dc0ED544A26BFb731192E8" // for Görli
+const protocol2Address2 = "0xd21A7E1576AC660040b04B1699ed8c611c2Be72E" // for Görli
 
-const verilayAddress = "0x9dCa11eF2C1F6E958e2B0bfcACe319a55a7C6D40" // for Görli
+// const verilayAddress = "0x9dCa11eF2C1F6E958e2B0bfcACe319a55a7C6D40" // for Görli
+
+const metaFAddress = "0x6b18654d0142D3A4918739c8f9342a4e8085B7Ca"      // for Görli
 
 
 const transferContract1 = new ethers.Contract(protocol2Address1, Protocol2, signer);
 const transferContract2 = new ethers.Contract(protocol2Address2, Protocol2, signer);
 
-const verilayContract = new ethers.Contract(verilayAddress, Verilay, signer);
+// const verilayContract = new ethers.Contract(verilayAddress, Verilay, signer);
+
+const metaFContract = new ethers.Contract(metaFAddress, MetaForwarder, signer);
 
 function App() {
   // Hold variables that will interact with our contract and frontend
   const [recipientAddress, setRecipientAddress] = useState(0);      // recipient address
   const [burned, setBurned] = useState(0);                          // address of burn result
   const [acc, setAcc] = useState(0)                                 // source address
+  
+  const abiCoder = new ethers.utils.AbiCoder();
 
 //   useEffect(() => {
 //     callSetAcc();
@@ -54,12 +62,12 @@ function App() {
 
   const startTransaction = async (t) => {
     t.preventDefault();
-    await getBalance();
+    // await getBalance();
     await burnTokens();
-    setTimeout(emptyTimeoutFunction,10000);
-    await claimTokens();
+    // setTimeout(emptyTimeoutFunction,10000);
+    // await claimTokens();
   };
-  
+//   
   const getBalance = async (t) => {
       // t.preventDefault();    
       const balance110 = await transferContract1.balanceOf(acc)
@@ -72,15 +80,16 @@ function App() {
     
     const burnTokens = async (t) => {
         // t.preventDefault();
-        const burnResult = await transferContract1.burn(recipientAddress, protocol2Address2, 2, 0)
-        await burnResult.wait();
-        setBurned(burnResult);
+        // const burnResult = await transferContract1.burn(recipientAddress, protocol2Address2, 2, 0)
+        // await burnResult.wait();
+        const burnResult = signBurn()
+        // setBurned(burnResult);
         const balance111 = await transferContract1.balanceOf(acc)
         const balance211 = await transferContract2.balanceOf(acc)
         const balance221 = await transferContract2.balanceOf(recipientAddress)
         document.getElementById("helper").value = balance111
         document.getElementById("helper1").value = balance211
-        document.getElementById("helper2").value = balance221
+        document.getElementById("helper2").value = (await burnResult)
     };
     
     const claimTokens = async (t) => {
@@ -89,22 +98,22 @@ function App() {
         const tx                = await web3.eth.getTransaction(burned.hash);
         const txReceipt         = await web3.eth.getTransactionReceipt(burned.hash);
         const rlpHeader         = createRLPHeader(block);
-    const rlpEncodedTx      = createRLPTransaction(tx);
-    const rlpEncodedReceipt = createRLPReceipt(txReceipt);
-    
-    const path = encodeToBuffer(tx.transactionIndex);
-    const rlpEncodedTxNodes = await createTxMerkleProof(block, tx.transactionIndex);
-    const rlpEncodedReceiptNodes = await createReceiptMerkleProof(block, tx.transactionIndex);
-    
-    const claimResult = await transferContract2.claim(rlpHeader, rlpEncodedTx, rlpEncodedReceipt, rlpEncodedTxNodes, rlpEncodedReceiptNodes, path);
-    await claimResult.wait();
-    const balance112 = await transferContract1.balanceOf(acc)
-    const balance212 = await transferContract2.balanceOf(acc)
-    const balance222 = await transferContract2.balanceOf(recipientAddress)
-    document.getElementById("helper").value = balance112
-    document.getElementById("helper1").value = balance212
-    document.getElementById("helper2").value = balance222
-};
+        const rlpEncodedTx      = createRLPTransaction(tx);
+        const rlpEncodedReceipt = createRLPReceipt(txReceipt);
+        
+        const path = encodeToBuffer(tx.transactionIndex);
+        const rlpEncodedTxNodes = await createTxMerkleProof(block, tx.transactionIndex);
+        const rlpEncodedReceiptNodes = await createReceiptMerkleProof(block, tx.transactionIndex);
+        
+        const claimResult = await transferContract2.claim(rlpHeader, rlpEncodedTx, rlpEncodedReceipt, rlpEncodedTxNodes, rlpEncodedReceiptNodes, path);
+        await claimResult.wait();
+        const balance112 = await transferContract1.balanceOf(acc)
+        const balance212 = await transferContract2.balanceOf(acc)
+        const balance222 = await transferContract2.balanceOf(recipientAddress)
+        document.getElementById("helper").value = balance112
+        document.getElementById("helper1").value = balance212
+        document.getElementById("helper2").value = balance222
+    };
 
 const createTxMerkleProof = async (block, transactionIndex) => {
     const trie = newTrie();
@@ -141,7 +150,36 @@ const createTxMerkleProof = async (block, transactionIndex) => {
     };
   
     const emptyTimeoutFunction = async (t) => {}
+
+
+    const signBurn = async (t) => {
+        // t.preventDefault();
+        let data = abiCoder.encode(['address', 'address', 'uint', 'uint'], [recipientAddress, protocol2Address2, 2, 0]);
+        data = data.slice(2,data.length);
+        const nonce = await metaFContract.getNonce(acc);
+        const function_hex = web3.eth.abi.encodeFunctionSignature('burn(address,address,uint,uint)')
+        const Req = {
+        from: acc,
+        to: protocol2Address2,
+        value: 0,
+        gas: 100000,
+        nonce: nonce,
+        data: function_hex + data
+        }
+
+        let message = ethers.utils.solidityKeccak256(
+            ['address', 'address', 'uint256', 'uint256', 'uint256', 'bytes'],
+            [Req.from, Req.to, Req.value, Req.gas, Req.nonce, Req.data] 
+        );
     
+        const arrayifyMessage = await ethers.utils.arrayify(message)
+        const flatSignature = await signer.signMessage(arrayifyMessage)
+        // const execute = await axios.get(`${'http://127.0.0.1:8545/'}${JSON.stringify(Req)}&signature=${flatSignature}`)
+        await metaFContract.execute(Req, flatSignature);
+        // return execute
+    }
+
+
     return (
         <div className="main">
       

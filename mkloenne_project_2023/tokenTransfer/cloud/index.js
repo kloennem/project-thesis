@@ -9,7 +9,7 @@ exports.relayTx = async (req, res) => {
   const reqStruct = JSON.parse(req.query.reqStruct);
   const signature = req.query.signature;
 
-  const relayer = '0x2A0d1f0EE9c5584b1694BCa16879423432770A52';
+  const relayer = '0x6b18654d0142D3A4918739c8f9342a4e8085B7Ca';
 
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
   const wallet = new ethers.Wallet(privateKey, provider);
