@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./RLPReader.sol";
 import "./MockedTxInclusionVerifier.sol";
-import "@opengsn/contracts/src/ERC2771Recipient";
+import "@opengsn/contracts/src/ERC2771Recipient.sol";
 
 contract Protocol2 is ERC20, ERC2771Recipient {
     using RLPReader for RLPReader.RLPItem;
@@ -13,6 +13,14 @@ contract Protocol2 is ERC20, ERC2771Recipient {
     using RLPReader for bytes;
 
     uint256 storedData;
+
+    function _msgData() override(Context, ERC2771Recipient) internal view virtual returns (bytes calldata) {
+        return ERC2771Recipient._msgData();
+    }
+    
+    function _msgSender() override(Context, ERC2771Recipient) internal view virtual returns (address) {
+        return ERC2771Recipient._msgSender();
+    }
 
     function set(uint256 x) public {
         storedData = x;
@@ -59,7 +67,7 @@ contract Protocol2 is ERC20, ERC2771Recipient {
         }
         txInclusionVerifier = MockedTxInclusionVerifier(txInclVerifier);
         _setTrustedForwarder(forwarder);
-        _mint(msg.sender, initialSupply);
+        _mint(ERC2771Recipient._msgSender(), initialSupply);
     }
 
     // For simplicity, use this function to register further token contracts.
@@ -73,8 +81,8 @@ contract Protocol2 is ERC20, ERC2771Recipient {
         require(recipient != address(0), "recipient address must not be zero address");
         require(participatingTokenContracts[claimContract] == true, "claim contract address is not registered");
         require(stake == REQUIRED_STAKE, 'provided stake does not match required stake');
-        _burn(msg.sender, value + stake);
-        emit Burn(msg.sender, recipient, claimContract, value);
+        _burn(ERC2771Recipient._msgSender(), value + stake);
+        emit Burn(ERC2771Recipient._msgSender(), recipient, claimContract, value);
     }
 
     function claim(
@@ -106,10 +114,10 @@ contract Protocol2 is ERC20, ERC2771Recipient {
         uint fee = calculateFee(c.value, TRANSFER_FEE);
         uint remainingValue = c.value - fee;
         address feeRecipient = c.recipient;
-        if (msg.sender != c.recipient && txInclusionVerifier.isBlockConfirmed(0, keccak256(rlpHeader), FAIR_CLAIM_PERIOD)) {
+        if (ERC2771Recipient._msgSender() != c.recipient && txInclusionVerifier.isBlockConfirmed(0, keccak256(rlpHeader), FAIR_CLAIM_PERIOD)) {
             // other client wants to claim fees
-            // fair claim period has elapsed -> fees go to msg.sender
-            feeRecipient = msg.sender;
+            // fair claim period has elapsed -> fees go to _msgSender()
+            feeRecipient = ERC2771Recipient._msgSender();
         }
 
         // mint fees to feeRecipient
@@ -153,7 +161,7 @@ contract Protocol2 is ERC20, ERC2771Recipient {
 
         address stakeRecipient = c.sender;
         if (c.burnTime + FAIR_CONFIRM_PERIOD < block.number) {
-            stakeRecipient = msg.sender;
+            stakeRecipient = ERC2771Recipient._msgSender();
         }
         _mint(stakeRecipient, REQUIRED_STAKE);
     }
