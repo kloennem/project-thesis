@@ -5,8 +5,9 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./RLPReader.sol";
 import "./MockedTxInclusionVerifier.sol";
+import "@opengsn/contracts/src/ERC2771Recipient";
 
-contract Protocol2 is ERC20 {
+contract Protocol2 is ERC20, ERC2771Recipient {
     using RLPReader for RLPReader.RLPItem;
     using RLPReader for RLPReader.Iterator;
     using RLPReader for bytes;
@@ -52,11 +53,12 @@ contract Protocol2 is ERC20 {
                                            // If the claim is posted after this period, the client submitting the claim gets the fees.
     uint constant FAIR_CONFIRM_PERIOD = 45; // similar to FAIR_CLAIM_PERIOD but intended for confirm tx
 
-    constructor(address[] memory tokenContracts, address txInclVerifier, uint initialSupply) ERC20("TestToken", "TKN") {
+    constructor(address[] memory tokenContracts, address txInclVerifier, uint initialSupply, address forwarder) ERC20("TestToken", "TKN") {
         for (uint i = 0; i < tokenContracts.length; i++) {
             participatingTokenContracts[tokenContracts[i]] = true;
         }
         txInclusionVerifier = MockedTxInclusionVerifier(txInclVerifier);
+        _setTrustedForwarder(forwarder);
         _mint(msg.sender, initialSupply);
     }
 

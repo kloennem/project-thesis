@@ -15,11 +15,17 @@ const {
     createRLPReceipt,
     encodeToBuffer
  } = require('./utils');
+ const {RelayProvider} = require('@opengsn/provider')
 
 // Access our wallet inside of our dapp
-const web3 = new Web3(Web3.givenProvider);
-
-const provider = new ethers.providers.Web3Provider(window.ethereum);
+const config = { 
+    paymasterAddress,
+    loggerConfiguration: {
+        logLevel: 'debug'
+    }
+}
+const provider = await RelayProvider.newProvider({ provider: web3.currentProvider, config }).init()
+const web3 = new Web3(provider);
 provider.send("eth_requestAccounts", []);
 const signer = provider.getSigner();
 
@@ -29,6 +35,9 @@ const protocol2Address1 = "0x9F7a9a6aD1f4f2EB779fD635181e2a3397bA47Fa" // for G�
 const protocol2Address2 = "0xB61c9C2824c5d0f7a6B1D6A727904726Bf4872De" // for Görli
 
 const verilayAddress = "0x9dCa11eF2C1F6E958e2B0bfcACe319a55a7C6D40" // for Görli
+
+const forwarderAddress = "0xB2b5841DBeF766d4b521221732F9B618fCf34A87 " // for Görli
+const paymasterAddress = "0x7e4123407707516bD7a3aFa4E3ebCeacfcbBb107" // for Görli
 
 
 const transferContract1 = new ethers.Contract(protocol2Address1, Protocol2, signer);
