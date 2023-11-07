@@ -33,12 +33,13 @@ const signer = provider.getSigner();
 
 
 // Contract address of the deployed smart contract
-const protocol2Address1 = "0x9F7a9a6aD1f4f2EB779fD635181e2a3397bA47Fa" // for Görli
-const protocol2Address2 = "0xB61c9C2824c5d0f7a6B1D6A727904726Bf4872De" // for Görli
+const protocol2Address1 = "0xa4F9da125498516da5faBd8dcDAaBfe7e9F935b9" // for Görli
+const protocol2Address2 = "0x32EDaC280AB7f7819db6E2F99594F5a39046EAa2" // for Görli
 
 const verilayAddress = "0x9dCa11eF2C1F6E958e2B0bfcACe319a55a7C6D40" // for Görli
 
 const forwarderAddress = "0xB2b5841DBeF766d4b521221732F9B618fCf34A87 " // for Görli
+// const forwarderAddress = "0x7DDa9Bf2C0602a96c06FA5996F715C7Acfb8E7b0 " // for Görli
 
 
 const transferContract1 = new ethers.Contract(protocol2Address1, Protocol2, signer);
