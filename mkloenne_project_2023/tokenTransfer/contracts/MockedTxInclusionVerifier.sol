@@ -9,11 +9,11 @@ import "./TxInclusionVerifier.sol";
 */
 contract MockedTxInclusionVerifier is TxInclusionVerifier {
 
-    uint8 verifyTxResult;
-    uint8 verifyReceiptResult;
+    bool verifyTxResult;
+    bool verifyReceiptResult;
     bool blockConfirmationResult;
 
-    constructor(uint8 _verifyTxResult, uint8 _verifyReceiptResult, bool _blockConfirmationResult) {
+    constructor(bool _verifyTxResult, bool _verifyReceiptResult, bool _blockConfirmationResult) {
         verifyTxResult = _verifyTxResult;
         verifyReceiptResult = _verifyReceiptResult;
         blockConfirmationResult = _blockConfirmationResult;
@@ -29,12 +29,12 @@ contract MockedTxInclusionVerifier is TxInclusionVerifier {
     }
 
     function verifyTransaction(uint /*feeInWei*/, bytes memory /*rlpHeader*/, uint8 /*noOfConfirmations*/, bytes memory /*rlpEncodedTx*/,
-        bytes memory /*path*/, bytes memory /*rlpEncodedNodes*/) override payable public returns (uint8) {
+        bytes memory /*path*/, bytes memory /*rlpEncodedNodes*/) override payable public returns (bool) {
         return verifyTxResult;
     }
 
     function verifyReceipt(uint /*feeInWei*/, bytes memory /*rlpHeader*/, uint8 /*noOfConfirmations*/, bytes memory /*rlpEncodedReceipt*/,
-        bytes memory /*path*/, bytes memory /*rlpEncodedNodes*/) override payable public returns (uint8) {
+        bytes memory /*path*/, bytes memory /*rlpEncodedNodes*/) override payable public returns (bool) {
         return verifyReceiptResult;
     }
 

@@ -1,5 +1,9 @@
 const Web3 = require("web3")
 const ethers = require("ethers")
+const readline = require('readline').createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
 const MockedTxInclusionVerifier = [
     {
       "inputs": [
@@ -716,14 +720,59 @@ const protocol2Address1 = "0x302eE5A43e22cdB88440070717b94F9821C64182"
 const verifierContract = new ethers.Contract(verifierAddress, MockedTxInclusionVerifier, signer);
 const transferContract1 = new ethers.Contract(protocol2Address1, Protocol2, signer);
 
-console.log("Start")
+let blockConfirmed = false;
+let transactionVerified = false;
+let receiptVerified = false;
 
-transferContract1.on("Burn", (from, to, contract, value)=>{
-    let transferEvent ={
-        from: from,
-        to: to,
-        value: value,
-        contract: contract,
-    }
-    console.log(JSON.stringify(transferEvent, null, 4))
-})
+start();
+
+async function start(){
+    console.log("Start")
+    transferContract1.on("Burn", async (from, to, contract, value)=>{
+        let transferEvent ={
+            from: from,
+            to: to,
+            value: value,
+            contract: contract,
+        }
+        console.log(JSON.stringify(transferEvent, null, 4))
+        await question1();
+        await question2();
+        await question3();
+    })
+}
+
+
+const question1 = () => {
+    return new Promise((resolve, reject) => {
+        readline.question('Do you want to verify that the block is confirmed? (y/n)', verifyBlock => {
+            if(verifyBlock == "y"){
+                blockConfirmed = true;
+            }
+            console.log(`Block confirmed: ${blockConfirmed}`);
+            resolve();
+        })
+    })
+}
+const question2 = () => {
+    return new Promise((resolve, reject) => {
+        readline.question('Do you want to verify the transaction? (y/n)', verifyTransaction => {
+            if(verifyTransaction == "y"){
+                transactionVerified = true;
+            }
+            console.log(`Transaction verified: ${transactionVerified}`);
+            resolve()
+        })
+    })
+}
+const question3 = () => {
+    return new Promise((resolve, reject) => {
+        readline.question('Do you want to verify the receipt? (y/n)', verifyReceipt => {
+            if(verifyReceipt == "y"){
+                receiptVerified = true;
+            }
+            console.log(`Block Confirmed: ${receiptVerified}`);
+            resolve()
+        })
+    })
+}

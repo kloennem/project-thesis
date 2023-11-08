@@ -6,10 +6,10 @@ abstract contract TxInclusionVerifier {
     function isBlockConfirmed(uint feeInWei, bytes32 blockHash, uint requiredConfirmations) payable public virtual returns (bool);
 
     function verifyTransaction(uint feeInWei, bytes memory rlpHeader, uint8 noOfConfirmations, bytes memory rlpEncodedTx,
-        bytes memory path, bytes memory rlpEncodedNodes) payable public virtual returns (uint8);
+        bytes memory path, bytes memory rlpEncodedNodes) payable public virtual returns (bool);
 
     function verifyReceipt(uint feeInWei, bytes memory rlpHeader, uint8 noOfConfirmations, bytes memory rlpEncodedReceipt,
-        bytes memory path, bytes memory rlpEncodedNodes) payable public virtual returns (uint8);
+        bytes memory path, bytes memory rlpEncodedNodes) payable public virtual returns (bool);
 
     function verifyState(uint feeInWei, bytes memory rlpHeader, uint8 noOfConfirmations, bytes memory rlpEncodedState,
         bytes memory path, bytes memory rlpEncodedNodes) payable public virtual returns (uint8);
