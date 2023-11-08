@@ -84,6 +84,7 @@ contract Protocol2 is ERC20 {
         bytes memory path                   // the path from the root node down to the burn tx/receipt in the corresponding Merkle tries (tx, receipt).
                                             // path is the same for both tx and its receipt.
     ) public {
+        bytes32 txHash = keccak256(serializedTx);
 
         require(claimedTransactions[keccak256(serializedTx)] == false, "tokens have already been claimed");
 
@@ -96,15 +97,15 @@ contract Protocol2 is ERC20 {
         require(c.isBurnValid == true, "burn transaction was not successful (e.g., require statement was violated)");
 
         // verify inclusion of burn transaction
-        require(txInclusionVerifier.verifyTransaction(0, rlpHeader, REQUIRED_TX_CONFIRMATIONS, serializedTx, path, rlpMerkleProofTx) == 0, "burn transaction does not exist or has not enough confirmations");
+        require(txInclusionVerifier.verifyTransaction(0, rlpHeader, REQUIRED_TX_CONFIRMATIONS, serializedTx, path, rlpMerkleProofTx, txHash) == 0, "burn transaction does not exist or has not enough confirmations");
 
         // verify inclusion of receipt
-        require(txInclusionVerifier.verifyReceipt(0, rlpHeader, REQUIRED_TX_CONFIRMATIONS, serializedReceipt, path, rlpMerkleProofReceipt) == 0, "burn receipt does not exist or has not enough confirmations");
+        require(txInclusionVerifier.verifyReceipt(0, rlpHeader, REQUIRED_TX_CONFIRMATIONS, serializedReceipt, path, rlpMerkleProofReceipt, txHash) == 0, "burn receipt does not exist or has not enough confirmations");
 
         uint fee = calculateFee(c.value, TRANSFER_FEE);
         uint remainingValue = c.value - fee;
         address feeRecipient = c.recipient;
-        if (msg.sender != c.recipient && txInclusionVerifier.isBlockConfirmed(0, keccak256(rlpHeader), FAIR_CLAIM_PERIOD)) {
+        if (msg.sender != c.recipient && txInclusionVerifier.isBlockConfirmed(0, keccak256(rlpHeader), FAIR_CLAIM_PERIOD, txHash)) {
             // other client wants to claim fees
             // fair claim period has elapsed -> fees go to msg.sender
             feeRecipient = msg.sender;

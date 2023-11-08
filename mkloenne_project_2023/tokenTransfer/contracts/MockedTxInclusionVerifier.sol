@@ -2,47 +2,90 @@
 
 pragma solidity ^0.8.0;
 
-import "./TxInclusionVerifier.sol";
+contract MockedTxInclusionVerifier{
 
-/**
-   This contract is used for automated tests.
-*/
-contract MockedTxInclusionVerifier is TxInclusionVerifier {
+    bytes32[20] currentBurnBlockHash;
+    mapping(bytes32 => uint) blockHashIndex;
 
-    bool verifyTxResult;
-    bool verifyReceiptResult;
-    bool blockConfirmationResult;
+    mapping(bytes32 => bool) verifyTxResult;
+    mapping(bytes32 => bool) verifyReceiptResult;
+    mapping(bytes32 => bool) blockConfirmationResult;
 
-    constructor(bool _verifyTxResult, bool _verifyReceiptResult, bool _blockConfirmationResult) {
-        verifyTxResult = _verifyTxResult;
-        verifyReceiptResult = _verifyReceiptResult;
-        blockConfirmationResult = _blockConfirmationResult;
+    uint verifyTxResultCounter = 0;
+    uint verifyReceiptCounter = 0;
+    uint blockConfirmationResultCounter = 0;
+
+    address[10] oracles;
+
+    constructor(address[10] memory _oracles) {
+        oracles = _oracles;
     }
 
-    // todo: change parameters
-    function startOracle() public {
-        emit StartOracle();
+    function startOracle(bytes32 _currentBurnBlockHash) public {
+        for(uint i=1; i<=20; i++){
+            if(currentBurnBlockHash[i] == 0){
+                currentBurnBlockHash[i] = _currentBurnBlockHash;
+                blockHashIndex[_currentBurnBlockHash] = i;
+                emit StartOracle(_currentBurnBlockHash);
+                break;
+            }
+        }
+        if(blockHashIndex[_currentBurnBlockHash]==0){
+            emit StartFailed(_currentBurnBlockHash);
+        }
     }
 
-    function isBlockConfirmed(uint /*feeInWei*/, bytes32 /*blockHash*/, uint /*requiredConfirmations*/) override payable public returns (bool) {
-        return blockConfirmationResult;
+    function fromOracle(bool _verifyTxResult, bool _verifyReceiptResult, bool _blockConfirmationResult, bytes32 _currentBurnBlockHash) public {
+        bytes32 index = currentBurnBlockHash[blockHashIndex[_currentBurnBlockHash]];
+        for(uint i=1; i<10; i++){
+            if(msg.sender == oracles[i]){
+                if(_verifyTxResult == true){
+                    verifyTxResultCounter++;
+                }
+                if(_verifyReceiptResult == true){
+                    verifyReceiptCounter++;
+                }
+                if(_blockConfirmationResult == true){
+                    blockConfirmationResultCounter++;
+                }
+                break;
+            }
+        }
+        if(verifyTxResultCounter>=6&&verifyTxResult[index]!=true){
+            verifyTxResult[index] = true;
+        }
+        if(verifyReceiptCounter>=6&&verifyReceiptResult[index]!=true){
+            verifyReceiptResult[index] = true;
+        }
+        if(blockConfirmationResultCounter>=6&&blockConfirmationResult[index]!=true){
+            blockConfirmationResult[index] = true;
+        }
+        if(verifyTxResult[index]&&verifyReceiptResult[index]&&blockConfirmationResult[index]){
+            currentBurnBlockHash[blockHashIndex[_currentBurnBlockHash]] = 0;
+            emit OraclePositive(index);
+        }
+    }
+
+    function isBlockConfirmed(uint /*feeInWei*/, bytes32 /*blockHash*/, uint /*requiredConfirmations*/, bytes32 _currentBurnBlockHash) payable public returns (bool) {
+        return blockConfirmationResult[currentBurnBlockHash[blockHashIndex[_currentBurnBlockHash]]];
     }
 
     function verifyTransaction(uint /*feeInWei*/, bytes memory /*rlpHeader*/, uint8 /*noOfConfirmations*/, bytes memory /*rlpEncodedTx*/,
-        bytes memory /*path*/, bytes memory /*rlpEncodedNodes*/) override payable public returns (bool) {
-        return verifyTxResult;
+        bytes memory /*path*/, bytes memory /*rlpEncodedNodes*/, bytes32 _currentBurnBlockHash) payable public returns (bool) {
+        return verifyTxResult[currentBurnBlockHash[blockHashIndex[_currentBurnBlockHash]]];
     }
 
     function verifyReceipt(uint /*feeInWei*/, bytes memory /*rlpHeader*/, uint8 /*noOfConfirmations*/, bytes memory /*rlpEncodedReceipt*/,
-        bytes memory /*path*/, bytes memory /*rlpEncodedNodes*/) override payable public returns (bool) {
-        return verifyReceiptResult;
+        bytes memory /*path*/, bytes memory /*rlpEncodedNodes*/, bytes32 _currentBurnBlockHash) payable public returns (bool) {
+        return verifyReceiptResult[currentBurnBlockHash[blockHashIndex[_currentBurnBlockHash]]];
     }
 
     function verifyState(uint /*feeInWei*/, bytes memory /*rlpHeader*/, uint8 /*noOfConfirmations*/, bytes memory /*rlpEncodedState*/,
-        bytes memory /*path*/, bytes memory /*rlpEncodedNodes*/) override payable public returns (uint8) {
+        bytes memory /*path*/, bytes memory /*rlpEncodedNodes*/) payable public returns (uint8) {
         return 0;
     }
 
-    event StartOracle();
-
+    event StartOracle(bytes32 indexed burnBlockHash);
+    event OraclePositive(bytes32 indexed burnBlockHash);
+    event StartFailed(bytes32 indexed burnBlockHash);
 }
