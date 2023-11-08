@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Web3 from "web3";
 import { ethers } from "ethers";
-import { Protocol2, Ethrelay, Verilay } from "./abi/abi"; 
-import BigNumber from "bignumber.js"
+import { Protocol2 } from "./abi/abi"; 
 import './App.css';
 
 const RLP = require('rlp');
@@ -28,13 +27,9 @@ const signer = provider.getSigner();
 const protocol2Address1 = "0x9F7a9a6aD1f4f2EB779fD635181e2a3397bA47Fa" // for Görli
 const protocol2Address2 = "0xB61c9C2824c5d0f7a6B1D6A727904726Bf4872De" // for Görli
 
-const verilayAddress = "0x9dCa11eF2C1F6E958e2B0bfcACe319a55a7C6D40" // for Görli
-
-
 const transferContract1 = new ethers.Contract(protocol2Address1, Protocol2, signer);
 const transferContract2 = new ethers.Contract(protocol2Address2, Protocol2, signer);
 
-const verilayContract = new ethers.Contract(verilayAddress, Verilay, signer);
 
 function App() {
   // Hold variables that will interact with our contract and frontend
