@@ -19,6 +19,11 @@ contract MockedTxInclusionVerifier is TxInclusionVerifier {
         blockConfirmationResult = _blockConfirmationResult;
     }
 
+    // todo: change parameters
+    function startOracle() public {
+        emit StartOracle();
+    }
+
     function isBlockConfirmed(uint /*feeInWei*/, bytes32 /*blockHash*/, uint /*requiredConfirmations*/) override payable public returns (bool) {
         return blockConfirmationResult;
     }
@@ -37,5 +42,7 @@ contract MockedTxInclusionVerifier is TxInclusionVerifier {
         bytes memory /*path*/, bytes memory /*rlpEncodedNodes*/) override payable public returns (uint8) {
         return 0;
     }
+
+    event StartOracle();
 
 }

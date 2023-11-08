@@ -24,8 +24,8 @@ const signer = provider.getSigner();
 
 
 // Contract address of the deployed smart contract
-const protocol2Address1 = "0x9F7a9a6aD1f4f2EB779fD635181e2a3397bA47Fa" // for Görli
-const protocol2Address2 = "0xB61c9C2824c5d0f7a6B1D6A727904726Bf4872De" // for Görli
+const protocol2Address1 = "0x302eE5A43e22cdB88440070717b94F9821C64182" // for Görli
+const protocol2Address2 = "0x9543e9D776f1654094E995F4Cdc8B0b3791AFC52" // for Görli
 
 const transferContract1 = new ethers.Contract(protocol2Address1, Protocol2, signer);
 const transferContract2 = new ethers.Contract(protocol2Address2, Protocol2, signer);
@@ -48,12 +48,20 @@ function App() {
     setAcc(account)
   };
 
+  const init = async () => {
+    const tC1 = await transferContract1.registerTokenContract(protocol2Address2);
+    await tC1.wait();
+    const tC2 = await transferContract2.registerTokenContract(protocol2Address1);
+    await tC2.wait();
+  };
+
   const startTransaction = async (t) => {
     t.preventDefault();
+    // await init();
     await getBalance();
     await burnTokens();
-    setTimeout(emptyTimeoutFunction,12000);
-    await claimTokens();
+    // setTimeout(emptyTimeoutFunction,12000);
+    // await claimTokens();
   };
   
   const getBalance = async (t) => {
@@ -85,22 +93,22 @@ function App() {
         const tx                = await web3.eth.getTransaction(burned.hash);
         const txReceipt         = await web3.eth.getTransactionReceipt(burned.hash);
         const rlpHeader         = createRLPHeader(block);
-    const rlpEncodedTx      = createRLPTransaction(tx);
-    const rlpEncodedReceipt = createRLPReceipt(txReceipt);
-    
-    const path = encodeToBuffer(tx.transactionIndex);
-    const rlpEncodedTxNodes = await createTxMerkleProof(block, tx.transactionIndex);
-    const rlpEncodedReceiptNodes = await createReceiptMerkleProof(block, tx.transactionIndex);
-    
-    const claimResult = await transferContract2.claim(rlpHeader, rlpEncodedTx, rlpEncodedReceipt, rlpEncodedTxNodes, rlpEncodedReceiptNodes, path);
-    await claimResult.wait();
-    const balance112 = await transferContract1.balanceOf(acc)
-    const balance212 = await transferContract2.balanceOf(acc)
-    const balance222 = await transferContract2.balanceOf(recipientAddress)
-    document.getElementById("helper").value = balance112
-    document.getElementById("helper1").value = balance212
-    document.getElementById("helper2").value = balance222
-};
+        const rlpEncodedTx      = createRLPTransaction(tx);
+        const rlpEncodedReceipt = createRLPReceipt(txReceipt);
+        
+        const path = encodeToBuffer(tx.transactionIndex);
+        const rlpEncodedTxNodes = await createTxMerkleProof(block, tx.transactionIndex);
+        const rlpEncodedReceiptNodes = await createReceiptMerkleProof(block, tx.transactionIndex);
+        
+        const claimResult = await transferContract2.claim(rlpHeader, rlpEncodedTx, rlpEncodedReceipt, rlpEncodedTxNodes, rlpEncodedReceiptNodes, path);
+        await claimResult.wait();
+        const balance112 = await transferContract1.balanceOf(acc)
+        const balance212 = await transferContract2.balanceOf(acc)
+        const balance222 = await transferContract2.balanceOf(recipientAddress)
+        document.getElementById("helper").value = balance112
+        document.getElementById("helper1").value = balance212
+        document.getElementById("helper2").value = balance222
+    };
 
 const createTxMerkleProof = async (block, transactionIndex) => {
     const trie = newTrie();
