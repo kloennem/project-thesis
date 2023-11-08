@@ -41,6 +41,7 @@ function App() {
   const [recipientAddress, setRecipientAddress] = useState(0);      // recipient address
   const [burned, setBurned] = useState(0);                          // address of burn result
   const [acc, setAcc] = useState(0)                                 // source address
+  const [tokenAmount, setAmount] = useState(0)
 
 //   useEffect(() => {
 //     callSetAcc();
@@ -56,7 +57,7 @@ function App() {
     t.preventDefault();
     await getBalance();
     await burnTokens();
-    setTimeout(emptyTimeoutFunction,10000);
+    setTimeout(emptyTimeoutFunction,12000);
     await claimTokens();
   };
   
@@ -67,12 +68,12 @@ function App() {
       const balance220 = await transferContract2.balanceOf(recipientAddress)
       document.getElementById("helper").value = balance110
       document.getElementById("helper1").value = balance210
-      document.getElementById("helper2").value = balance220
+      document.getElementById("helper2").value = tokenAmount
     };
     
     const burnTokens = async (t) => {
         // t.preventDefault();
-        const burnResult = await transferContract1.burn(recipientAddress, protocol2Address2, 2, 0)
+        const burnResult = await transferContract1.burn(recipientAddress, protocol2Address2, tokenAmount, 0)
         await burnResult.wait();
         setBurned(burnResult);
         const balance111 = await transferContract1.balanceOf(acc)
@@ -222,8 +223,10 @@ const createTxMerkleProof = async (block, transactionIndex) => {
               </label>
               <input
                className="input"
-               type="text"
-               name="name"
+               type="number"
+               name="amount"
+               id="amount"
+               onChange={(t) => setAmount(t.target.value)}
               />
             </form>
           </div>
