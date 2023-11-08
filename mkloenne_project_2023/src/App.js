@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import Web3 from "web3";
 import { ethers } from "ethers";
 import axios from 'axios';
-import { Protocol2, Verilay, MetaForwarder } from "./abi/abi"; 
-import BigNumber from "bignumber.js"
+import { Protocol2, MetaForwarder } from "./abi/abi"; 
 import './App.css';
 import { AbiCoder } from "ethers/lib/utils";
 
@@ -47,8 +46,9 @@ function App() {
   const [recipientAddress, setRecipientAddress] = useState(0);      // recipient address
   const [burned, setBurned] = useState(0);                          // address of burn result
   const [acc, setAcc] = useState(0)                                 // source address
+  const [data, setData] = useState([]);
   
-  const abiCoder = new ethers.utils.AbiCoder();
+  const abiCoder = new AbiCoder();
 
 //   useEffect(() => {
 //     callSetAcc();
@@ -89,7 +89,7 @@ function App() {
         const balance221 = await transferContract2.balanceOf(recipientAddress)
         document.getElementById("helper").value = balance111
         document.getElementById("helper1").value = balance211
-        document.getElementById("helper2").value = (await burnResult)
+        // document.getElementById("helper2").value = (await burnResult)
     };
     
     const claimTokens = async (t) => {
@@ -174,11 +174,38 @@ const createTxMerkleProof = async (block, transactionIndex) => {
     
         const arrayifyMessage = await ethers.utils.arrayify(message)
         const flatSignature = await signer.signMessage(arrayifyMessage)
+        
+        
         // const execute = await axios.get(`${'http://127.0.0.1:8545/'}${JSON.stringify(Req)}&signature=${flatSignature}`)
-        await metaFContract.execute(Req, flatSignature);
-        // return execute
-    }
+        // await metaFContract.execute(Req, flatSignature);
+        // const status = await axios.post('http://localhost:5000', {
+            //     Req,
+        //     flatSignature
+        // })
+        // .then(function (response) {
+        //     console.log(response);
+        // })
+        // .catch(function (error) {
+        //     console.log(error);
+        // });
 
+        // var clientServerOptions = {
+        //     url: 'http://localhost:7000',
+        //     body: JSON.stringify(Req, flatSignature),
+        //     method: 'POST',
+        //     headers: {
+            //         'Content-Type': 'application/json'
+            //     }
+            // }
+            // http.request(clientServerOptions, function (error, response) {
+                //     console.log(error,response.body);
+                //     return;
+                // });
+                
+                // document.getElementById("helper2").value = status.header
+                // return execute
+                
+    }
 
     return (
         <div className="main">
