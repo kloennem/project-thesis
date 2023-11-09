@@ -65,8 +65,12 @@ function App() {
   });
 
   window.ethereum.on('networkChanged', function(networkId){
-      document.getElementById("helper2").value = networkId
-      setNetwork();
+    document.getElementById("helper2").value = networkId
+    setNetwork();
+  });
+
+  window.ethereum.on('accountsChanged', function (accounts) {
+    callSetAcc();
   });
 
   const setNetwork = async (t) => {
@@ -92,12 +96,15 @@ function App() {
         signer = signerBNBTestnet;
         setCurrentNetwork("BNB Testnet");
     }
-    setAcc(signer.address)
+    const account = (await prov.send('eth_requestAccounts'))[0];
+    setAcc(account)
 }
 
 const callSetAcc = async (t) => {
     // t.preventDefault();
-    setAcc(signer.address)
+    let prov = new ethers.providers.Web3Provider(window.ethereum);
+    const account = (await prov.send('eth_requestAccounts'))[0];
+    setAcc(account)
   };
 
   const init = async () => {
