@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-contract MockedTxInclusionVerifier{
+contract OracleTxInclusionVerifier{
 
     bytes32[20] currentBurnBlockHash;
     mapping(bytes32 => uint) blockHashIndex;

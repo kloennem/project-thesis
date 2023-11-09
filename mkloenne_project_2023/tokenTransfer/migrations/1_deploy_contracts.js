@@ -5,7 +5,7 @@
 // };
 
 const TokenContract = artifacts.require("Protocol2");
-const TxInclusionVerifier = artifacts.require("MockedTxInclusionVerifier");
+const TxInclusionVerifier = artifacts.require("OracleTxInclusionVerifier");
 
 module.exports = async function(deployer, network) {
 

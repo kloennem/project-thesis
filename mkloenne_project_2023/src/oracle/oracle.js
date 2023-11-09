@@ -4,27 +4,97 @@ const readline = require('readline').createInterface({
     input: process.stdin,
     output: process.stdout
   });
-const MockedTxInclusionVerifier = [
+const OracleTxInclusionVerifier = [
     {
       "inputs": [
         {
-          "internalType": "uint8",
+          "internalType": "address[10]",
+          "name": "_oracles",
+          "type": "address[10]"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "burnBlockHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "OraclePositive",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "burnBlockHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "StartFailed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "burnBlockHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "StartOracle",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_currentBurnBlockHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "startOracle",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bool",
           "name": "_verifyTxResult",
-          "type": "uint8"
+          "type": "bool"
         },
         {
-          "internalType": "uint8",
+          "internalType": "bool",
           "name": "_verifyReceiptResult",
-          "type": "uint8"
+          "type": "bool"
         },
         {
           "internalType": "bool",
           "name": "_blockConfirmationResult",
           "type": "bool"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_currentBurnBlockHash",
+          "type": "bytes32"
         }
       ],
+      "name": "fromOracle",
+      "outputs": [],
       "stateMutability": "nonpayable",
-      "type": "constructor"
+      "type": "function"
     },
     {
       "inputs": [
@@ -42,6 +112,11 @@ const MockedTxInclusionVerifier = [
           "internalType": "uint256",
           "name": "",
           "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_currentBurnBlockHash",
+          "type": "bytes32"
         }
       ],
       "name": "isBlockConfirmed",
@@ -86,14 +161,19 @@ const MockedTxInclusionVerifier = [
           "internalType": "bytes",
           "name": "",
           "type": "bytes"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_currentBurnBlockHash",
+          "type": "bytes32"
         }
       ],
       "name": "verifyTransaction",
       "outputs": [
         {
-          "internalType": "uint8",
+          "internalType": "bool",
           "name": "",
-          "type": "uint8"
+          "type": "bool"
         }
       ],
       "stateMutability": "payable",
@@ -130,14 +210,19 @@ const MockedTxInclusionVerifier = [
           "internalType": "bytes",
           "name": "",
           "type": "bytes"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_currentBurnBlockHash",
+          "type": "bytes32"
         }
       ],
       "name": "verifyReceipt",
       "outputs": [
         {
-          "internalType": "uint8",
+          "internalType": "bool",
           "name": "",
-          "type": "uint8"
+          "type": "bool"
         }
       ],
       "stateMutability": "payable",
@@ -717,7 +802,7 @@ const signer = provider.getSigner();
 const verifierAddress = "0x13ab42fD975D0225b0B640b411f9Ff60B102E573"
 const protocol2Address1 = "0x302eE5A43e22cdB88440070717b94F9821C64182"
 
-const verifierContract = new ethers.Contract(verifierAddress, MockedTxInclusionVerifier, signer);
+const verifierContract = new ethers.Contract(verifierAddress, OracleTxInclusionVerifier, signer);
 const transferContract1 = new ethers.Contract(protocol2Address1, Protocol2, signer);
 
 let blockConfirmed = false;

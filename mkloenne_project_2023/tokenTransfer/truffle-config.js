@@ -78,7 +78,21 @@ module.exports = {
         provider: () => new HDWalletProvider(MNEMONIC, INFURA_API_KEY),
         network_id: '5',
         gas: 4465030
-    }
+    },
+    testnet: {
+        provider: () => new HDWalletProvider(mnemonic, `https://data-seed-prebsc-1-s1.bnbchain.org:8545`),
+        network_id: 97,
+        confirmations: 10,
+        timeoutBlocks: 200,
+        skipDryRun: true
+      },
+    bsc: {
+        provider: () => new HDWalletProvider(mnemonic, `https://bsc-dataseed1.bnbchain.org`),
+        network_id: 56,
+        confirmations: 10,
+        timeoutBlocks: 200,
+        skipDryRun: true
+      }
     //
     // An additional network, but with some advanced options…
     // advanced: {

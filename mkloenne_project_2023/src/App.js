@@ -15,6 +15,8 @@ const {
     encodeToBuffer
  } = require('./utils');
 
+const bnbInfuraLink = 'https://bnbsmartchain-testnet.infura.io/v3/2e342128028646b9b9ea1ef796849e23'
+
 // Access our wallet inside of our dapp
 const web3 = new Web3(Web3.givenProvider);
 
