@@ -15,22 +15,37 @@ const {
     encodeToBuffer
  } = require('./utils');
 
-const bnbInfuraLink = 'https://bnbsmartchain-testnet.infura.io/v3/2e342128028646b9b9ea1ef796849e23'
+// const bnbInfuraLink = 'https://bnbsmartchain-testnet.infura.io/v3/2e342128028646b9b9ea1ef796849e23'
 
 // Access our wallet inside of our dapp
 const web3 = new Web3(Web3.givenProvider);
+// const web3_2 = (new Web3.providers.HttpProvider(bnbInfuraLink))
 
 const provider = new ethers.providers.Web3Provider(window.ethereum);
 provider.send("eth_requestAccounts", []);
 const signer = provider.getSigner();
 
+// const provider2 = new ethers.providers.Web3Provider(web3_2.currentProvider);
+// const signer2 = provider2.getSigner();
+
 
 // Contract address of the deployed smart contract
-const protocol2Address1 = "0x302eE5A43e22cdB88440070717b94F9821C64182" // for Görli
-const protocol2Address2 = "0x9543e9D776f1654094E995F4Cdc8B0b3791AFC52" // for Görli
+const protocol2Address1Goerli = "0x302eE5A43e22cdB88440070717b94F9821C64182" // for Görli
+const protocol2Address2Goerli = "0x9543e9D776f1654094E995F4Cdc8B0b3791AFC52" // for Görli
 
-const transferContract1 = new ethers.Contract(protocol2Address1, Protocol2, signer);
-const transferContract2 = new ethers.Contract(protocol2Address2, Protocol2, signer);
+const protocol2Address1BNBTestnet = "0x072622F7349575bee212CFEab40b9edB044711Be" // for BNB Testnet
+const protocol2Address2BNBTestnet = "0x8604d996ebB5180da6674Df3c98238a5F2c27B3C" // for BNB Testnet
+
+const transferContract1Goerli = new ethers.Contract(protocol2Address1Goerli, Protocol2, signer);
+const transferContract2Goerli = new ethers.Contract(protocol2Address2Goerli, Protocol2, signer);
+
+const transferContract1BNBTestnet = new ethers.Contract(protocol2Address1BNBTestnet, Protocol2, signer);
+const transferContract2BNBTestnet = new ethers.Contract(protocol2Address2BNBTestnet, Protocol2, signer);
+
+let protocol2Address1Src;
+let protocol2Address2Src;
+let transferContract1Src;
+let transferContract2Src;
 
 
 function App() {
@@ -39,51 +54,71 @@ function App() {
   const [burned, setBurned] = useState(0);                          // address of burn result
   const [acc, setAcc] = useState(0)                                 // source address
   const [tokenAmount, setAmount] = useState(0)
+  const [currentNetwork, setCurrentNetwork] = useState("")
 
-//   useEffect(() => {
-//     callSetAcc();
-//   });
+  useEffect(() => {
+    callSetAcc();
+    setNetwork();
+});
+
+const setNetwork = async (t) => {
+    let temp = ((await provider.getNetwork()).chainId)
+    if(temp == 5){
+        protocol2Address1Src = protocol2Address1Goerli;
+        protocol2Address2Src = protocol2Address2Goerli;
+        transferContract1Src = transferContract1Goerli;
+        transferContract2Src = transferContract2Goerli;
+        setCurrentNetwork("Görli");
+    }
+    else if(temp == 97){
+        protocol2Address1Src = protocol2Address1BNBTestnet;
+        protocol2Address2Src = protocol2Address2BNBTestnet;
+        transferContract1Src = transferContract1BNBTestnet;
+        transferContract2Src = transferContract2BNBTestnet;
+        setCurrentNetwork("BNB Testnet");
+    }
+  }
   
   const callSetAcc = async (t) => {
-    t.preventDefault();
+    // t.preventDefault();
     const account = (await provider.send('eth_requestAccounts'))[0];
     setAcc(account)
   };
 
   const init = async () => {
-    const tC1 = await transferContract1.registerTokenContract(protocol2Address2);
+    const tC1 = await transferContract1Src.registerTokenContract(protocol2Address2Src);
     await tC1.wait();
-    const tC2 = await transferContract2.registerTokenContract(protocol2Address1);
+    const tC2 = await transferContract2Src.registerTokenContract(protocol2Address1Src);
     await tC2.wait();
   };
-
+  
   const startTransaction = async (t) => {
     t.preventDefault();
     // await init();
     await getBalance();
-    await burnTokens();
+    // await burnTokens();
     // setTimeout(emptyTimeoutFunction,12000);
     // await claimTokens();
   };
   
   const getBalance = async (t) => {
       // t.preventDefault();    
-      const balance110 = await transferContract1.balanceOf(acc)
-      const balance210 = await transferContract2.balanceOf(acc)
-      const balance220 = await transferContract2.balanceOf(recipientAddress)
+      const balance110 = await transferContract1Src.balanceOf(acc)
+      const balance210 = await transferContract2Src.balanceOf(acc)
+      const balance220 = await transferContract2Src.balanceOf(recipientAddress)
       document.getElementById("helper").value = balance110
       document.getElementById("helper1").value = balance210
-      document.getElementById("helper2").value = tokenAmount
+      document.getElementById("helper2").value = balance220
     };
     
     const burnTokens = async (t) => {
         // t.preventDefault();
-        const burnResult = await transferContract1.burn(recipientAddress, protocol2Address2, tokenAmount, 0)
+        const burnResult = await transferContract1Src.burn(recipientAddress, protocol2Address2Src, tokenAmount, 0)
         await burnResult.wait();
         setBurned(burnResult);
-        const balance111 = await transferContract1.balanceOf(acc)
-        const balance211 = await transferContract2.balanceOf(acc)
-        const balance221 = await transferContract2.balanceOf(recipientAddress)
+        const balance111 = await transferContract1Src.balanceOf(acc)
+        const balance211 = await transferContract2Src.balanceOf(acc)
+        const balance221 = await transferContract2Src.balanceOf(recipientAddress)
         document.getElementById("helper").value = balance111
         document.getElementById("helper1").value = balance211
         document.getElementById("helper2").value = balance221
@@ -102,11 +137,11 @@ function App() {
         const rlpEncodedTxNodes = await createTxMerkleProof(block, tx.transactionIndex);
         const rlpEncodedReceiptNodes = await createReceiptMerkleProof(block, tx.transactionIndex);
         
-        const claimResult = await transferContract2.claim(rlpHeader, rlpEncodedTx, rlpEncodedReceipt, rlpEncodedTxNodes, rlpEncodedReceiptNodes, path);
+        const claimResult = await transferContract2Src.claim(rlpHeader, rlpEncodedTx, rlpEncodedReceipt, rlpEncodedTxNodes, rlpEncodedReceiptNodes, path);
         await claimResult.wait();
-        const balance112 = await transferContract1.balanceOf(acc)
-        const balance212 = await transferContract2.balanceOf(acc)
-        const balance222 = await transferContract2.balanceOf(recipientAddress)
+        const balance112 = await transferContract1Src.balanceOf(acc)
+        const balance212 = await transferContract2Src.balanceOf(acc)
+        const balance222 = await transferContract2Src.balanceOf(recipientAddress)
         document.getElementById("helper").value = balance112
         document.getElementById("helper1").value = balance212
         document.getElementById("helper2").value = balance222
@@ -172,12 +207,10 @@ const createTxMerkleProof = async (block, transactionIndex) => {
           <div class="box">
             <form className="form" style={{"float":"left"}}>
               <label>
-                Choose source Blockchain:
+                Source Blockchain:
+                <br />
+                {currentNetwork}
               </label>
-              <select name="chains" style={{"width":"300px"}}>
-                <option selected="selected" value="goerli">Görli</option>
-                <option value="sepolia">Sepolia</option>
-              </select>
             </form>
             <form className="form" style={{"float":"right"}}>
               <label>
@@ -185,7 +218,7 @@ const createTxMerkleProof = async (block, transactionIndex) => {
               </label>
               <select name="chains" style={{"width":"300px"}}>
                 <option selected="selected" value="goerli">Görli</option>
-                <option value="sepolia">Sepolia</option>
+                <option value="bnb_testnet">BNB Testnet</option>
               </select>
             </form>
           </div>

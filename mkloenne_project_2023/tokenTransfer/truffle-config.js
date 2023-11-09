@@ -47,7 +47,7 @@
 // const HDWalletProvider = require('@truffle/hdwallet-provider');
 
 require('dotenv').config();
-const { MNEMONIC, INFURA_API_KEY } = process.env;
+const { MNEMONIC, GOERLI_API_KEY, BNB_TESTNET_API_KEY, BNB_API_KEY } = process.env;
 
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 
@@ -75,19 +75,19 @@ module.exports = {
      network_id: "*",       // Any network (default: none)
     },
     goerli: {
-        provider: () => new HDWalletProvider(MNEMONIC, INFURA_API_KEY),
+        provider: () => new HDWalletProvider(MNEMONIC, GOERLI_API_KEY),
         network_id: '5',
         gas: 4465030
     },
     testnet: {
-        provider: () => new HDWalletProvider(mnemonic, `https://data-seed-prebsc-1-s1.bnbchain.org:8545`),
+        provider: () => new HDWalletProvider(MNEMONIC, BNB_TESTNET_API_KEY),
         network_id: 97,
         confirmations: 10,
         timeoutBlocks: 200,
         skipDryRun: true
       },
     bsc: {
-        provider: () => new HDWalletProvider(mnemonic, `https://bsc-dataseed1.bnbchain.org`),
+        provider: () => new HDWalletProvider(MNEMONIC, BNB_API_KEY),
         network_id: 56,
         confirmations: 10,
         timeoutBlocks: 200,
