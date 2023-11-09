@@ -33,15 +33,10 @@ const signerBNBTestnet = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a3
 const protocol2Address1Goerli = "0x302eE5A43e22cdB88440070717b94F9821C64182"
 const protocol2Address2Goerli = "0x9543e9D776f1654094E995F4Cdc8B0b3791AFC52"
 
-const transferContract1Goerli = new ethers.Contract(protocol2Address1Goerli, Protocol2, signerGoerli);
-const transferContract2Goerli = new ethers.Contract(protocol2Address2Goerli, Protocol2, signerGoerli);
-
 // for BNB Testnet
 const protocol2Address1BNBTestnet = "0x072622F7349575bee212CFEab40b9edB044711Be"
 const protocol2Address2BNBTestnet = "0x8604d996ebB5180da6674Df3c98238a5F2c27B3C"
 
-const transferContract1BNBTestnet = new ethers.Contract(protocol2Address1BNBTestnet, Protocol2, signerBNBTestnet);
-const transferContract2BNBTestnet = new ethers.Contract(protocol2Address2BNBTestnet, Protocol2, signerBNBTestnet);
 
 let protocol2Address1Src;
 let protocol2Address2Src;
@@ -79,8 +74,6 @@ function App() {
     if(temp === 5){
         protocol2Address1Src = protocol2Address1Goerli;
         protocol2Address2Src = protocol2Address2Goerli;
-        transferContract1Src = transferContract1Goerli;
-        transferContract2Src = transferContract2Goerli;
         web3 = web3Goerli;
         provider = providerGoerli;
         signer = signerGoerli;
@@ -89,8 +82,6 @@ function App() {
     else if(temp === 97){
         protocol2Address1Src = protocol2Address1BNBTestnet;
         protocol2Address2Src = protocol2Address2BNBTestnet;
-        transferContract1Src = transferContract1BNBTestnet;
-        transferContract2Src = transferContract2BNBTestnet;
         web3 = web3BNBTestnet;
         provider = providerBNBTestnet;
         signer = signerBNBTestnet;
@@ -98,6 +89,8 @@ function App() {
     }
     const account = (await prov.send('eth_requestAccounts'))[0];
     setAcc(account)
+    transferContract1Src = new ethers.Contract(protocol2Address1Src, Protocol2, prov.getSigner());
+    transferContract2Src = new ethers.Contract(protocol2Address2Src, Protocol2, prov.getSigner());
 }
 
 const callSetAcc = async (t) => {
