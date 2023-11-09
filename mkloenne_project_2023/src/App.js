@@ -15,37 +15,41 @@ const {
     encodeToBuffer
  } = require('./utils');
 
-// const bnbInfuraLink = 'https://bnbsmartchain-testnet.infura.io/v3/2e342128028646b9b9ea1ef796849e23'
 
 // Access our wallet inside of our dapp
-const web3 = new Web3(Web3.givenProvider);
-// const web3_2 = (new Web3.providers.HttpProvider(bnbInfuraLink))
+// for Görli
+const web3Goerli = new Web3(new Web3.providers.HttpProvider("https://goerli.infura.io/v3/2e342128028646b9b9ea1ef796849e23"))
+const providerGoerli = new ethers.providers.Web3Provider(web3Goerli.currentProvider);
+const signerGoerli = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", providerGoerli)
 
-const provider = new ethers.providers.Web3Provider(window.ethereum);
-provider.send("eth_requestAccounts", []);
-const signer = provider.getSigner();
-
-// const provider2 = new ethers.providers.Web3Provider(web3_2.currentProvider);
-// const signer2 = provider2.getSigner();
+// for BNB Testnet
+const web3BNBTestnet = new Web3(new Web3.providers.HttpProvider('https://data-seed-prebsc-1-s1.binance.org:8545'))
+const providerBNBTestnet = new ethers.providers.Web3Provider(web3BNBTestnet.currentProvider);
+const signerBNBTestnet = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", providerBNBTestnet)
 
 
-// Contract address of the deployed smart contract
-const protocol2Address1Goerli = "0x302eE5A43e22cdB88440070717b94F9821C64182" // for Görli
-const protocol2Address2Goerli = "0x9543e9D776f1654094E995F4Cdc8B0b3791AFC52" // for Görli
+// Contract addresses of the deployed smart contract
+// for Görli
+const protocol2Address1Goerli = "0x302eE5A43e22cdB88440070717b94F9821C64182"
+const protocol2Address2Goerli = "0x9543e9D776f1654094E995F4Cdc8B0b3791AFC52"
 
-const protocol2Address1BNBTestnet = "0x072622F7349575bee212CFEab40b9edB044711Be" // for BNB Testnet
-const protocol2Address2BNBTestnet = "0x8604d996ebB5180da6674Df3c98238a5F2c27B3C" // for BNB Testnet
+const transferContract1Goerli = new ethers.Contract(protocol2Address1Goerli, Protocol2, signerGoerli);
+const transferContract2Goerli = new ethers.Contract(protocol2Address2Goerli, Protocol2, signerGoerli);
 
-const transferContract1Goerli = new ethers.Contract(protocol2Address1Goerli, Protocol2, signer);
-const transferContract2Goerli = new ethers.Contract(protocol2Address2Goerli, Protocol2, signer);
+// for BNB Testnet
+const protocol2Address1BNBTestnet = "0x072622F7349575bee212CFEab40b9edB044711Be"
+const protocol2Address2BNBTestnet = "0x8604d996ebB5180da6674Df3c98238a5F2c27B3C"
 
-const transferContract1BNBTestnet = new ethers.Contract(protocol2Address1BNBTestnet, Protocol2, signer);
-const transferContract2BNBTestnet = new ethers.Contract(protocol2Address2BNBTestnet, Protocol2, signer);
+const transferContract1BNBTestnet = new ethers.Contract(protocol2Address1BNBTestnet, Protocol2, signerBNBTestnet);
+const transferContract2BNBTestnet = new ethers.Contract(protocol2Address2BNBTestnet, Protocol2, signerBNBTestnet);
 
 let protocol2Address1Src;
 let protocol2Address2Src;
 let transferContract1Src;
 let transferContract2Src;
+let web3;
+let provider;
+let signer;
 
 
 function App() {
@@ -57,32 +61,43 @@ function App() {
   const [currentNetwork, setCurrentNetwork] = useState("")
 
   useEffect(() => {
-    callSetAcc();
     setNetwork();
-});
+  });
 
-const setNetwork = async (t) => {
-    let temp = ((await provider.getNetwork()).chainId)
-    if(temp == 5){
+  window.ethereum.on('networkChanged', function(networkId){
+      document.getElementById("helper2").value = networkId
+      setNetwork();
+  });
+
+  const setNetwork = async (t) => {
+    let prov = new ethers.providers.Web3Provider(window.ethereum);
+    let temp = ((await prov.getNetwork()).chainId)
+    if(temp === 5){
         protocol2Address1Src = protocol2Address1Goerli;
         protocol2Address2Src = protocol2Address2Goerli;
         transferContract1Src = transferContract1Goerli;
         transferContract2Src = transferContract2Goerli;
+        web3 = web3Goerli;
+        provider = providerGoerli;
+        signer = signerGoerli;
         setCurrentNetwork("Görli");
     }
-    else if(temp == 97){
+    else if(temp === 97){
         protocol2Address1Src = protocol2Address1BNBTestnet;
         protocol2Address2Src = protocol2Address2BNBTestnet;
         transferContract1Src = transferContract1BNBTestnet;
         transferContract2Src = transferContract2BNBTestnet;
+        web3 = web3BNBTestnet;
+        provider = providerBNBTestnet;
+        signer = signerBNBTestnet;
         setCurrentNetwork("BNB Testnet");
     }
-  }
-  
-  const callSetAcc = async (t) => {
+    setAcc(signer.address)
+}
+
+const callSetAcc = async (t) => {
     // t.preventDefault();
-    const account = (await provider.send('eth_requestAccounts'))[0];
-    setAcc(account)
+    setAcc(signer.address)
   };
 
   const init = async () => {
@@ -108,7 +123,7 @@ const setNetwork = async (t) => {
       const balance220 = await transferContract2Src.balanceOf(recipientAddress)
       document.getElementById("helper").value = balance110
       document.getElementById("helper1").value = balance210
-      document.getElementById("helper2").value = balance220
+      document.getElementById("helper2").value = (await provider.getNetwork()).chainId
     };
     
     const burnTokens = async (t) => {
