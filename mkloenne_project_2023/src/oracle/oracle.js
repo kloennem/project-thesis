@@ -796,8 +796,8 @@ const web3 = new Web3(new Web3.providers.HttpProvider('https://goerli.infura.io/
 
 const provider = new ethers.providers.Web3Provider(web3.currentProvider);
 // provider.send("eth_requestAccounts", []);
-const signer = provider.getSigner();
-// const signer = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78")
+// const signer = provider.getSigner();
+const signer = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", provider)
 
 const verifierAddressGoerli = "0xDFabC31177166199B18D92B76b7AE158D76dAd8C"
 const protocol2Address1Goerli = "0x302eE5A43e22cdB88440070717b94F9821C64182"
@@ -816,17 +816,14 @@ start();
 
 async function start(){
     console.log("Start")
-    transferContract1.on("Burn", async (from, to, contract, value)=>{
-        let transferEvent ={
-            from: from,
-            to: to,
-            value: value,
-            contract: contract,
-        }
-        console.log(JSON.stringify(transferEvent, null, 4))
+    verifierContract.on("StartOracle", async (blockHash)=>{
+        
+        console.log(JSON.stringify(blockHash, null, 4))
         await question1();
         await question2();
         await question3();
+        await verifierContract.fromOracle(transactionVerified, receiptVerified, blockConfirmed, blockHash);
+        console.log("Response sent");
     })
 }
 
