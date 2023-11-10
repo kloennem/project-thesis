@@ -799,7 +799,7 @@ const provider = new ethers.providers.Web3Provider(web3.currentProvider);
 const signer = provider.getSigner();
 // const signer = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78")
 
-const verifierAddressGoerli = "0x13ab42fD975D0225b0B640b411f9Ff60B102E573"
+const verifierAddressGoerli = "0xDFabC31177166199B18D92B76b7AE158D76dAd8C"
 const protocol2Address1Goerli = "0x302eE5A43e22cdB88440070717b94F9821C64182"
 
 const verifierAddressBNBTestnet = "0xa0cff663BaD972fD5a433Fc7F023FD7f4aD8E60c"

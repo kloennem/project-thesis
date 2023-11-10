@@ -51,13 +51,13 @@ contract OracleTxInclusionVerifier{
                 break;
             }
         }
-        if(verifyTxResultCounter>=6&&verifyTxResult[index]!=true){
+        if(verifyTxResultCounter>=1&&verifyTxResult[index]!=true){
             verifyTxResult[index] = true;
         }
-        if(verifyReceiptCounter>=6&&verifyReceiptResult[index]!=true){
+        if(verifyReceiptCounter>=1&&verifyReceiptResult[index]!=true){
             verifyReceiptResult[index] = true;
         }
-        if(blockConfirmationResultCounter>=6&&blockConfirmationResult[index]!=true){
+        if(blockConfirmationResultCounter>=1&&blockConfirmationResult[index]!=true){
             blockConfirmationResult[index] = true;
         }
         if(verifyTxResult[index]&&verifyReceiptResult[index]&&blockConfirmationResult[index]){

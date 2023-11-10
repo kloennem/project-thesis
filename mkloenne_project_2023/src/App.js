@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Web3 from "web3";
 import { ethers } from "ethers";
-import { Protocol2 } from "./abi/abi"; 
+import { Protocol2, OracleTxInclusionVerifier } from "./abi/abi"; 
 import './App.css';
 
 const RLP = require('rlp');
@@ -30,27 +30,36 @@ const signerBNBTestnet = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a3
 
 // Contract addresses of the deployed smart contract
 // for Görli
-const protocol2Address1Goerli = "0x302eE5A43e22cdB88440070717b94F9821C64182"
-const protocol2Address2Goerli = "0x9543e9D776f1654094E995F4Cdc8B0b3791AFC52"
+const protocol2Address1Goerli = "0x40f94B9EecE9DE0892D124C698fBD6FA36c3f80b"
+const protocol2Address2Goerli = "0xb9B56965B0522C674E97e10Acffa7ae28024cD7c"
+const verifierAddressGoerli = "0xDFabC31177166199B18D92B76b7AE158D76dAd8C"
 
 // for BNB Testnet
 const protocol2Address1BNBTestnet = "0x072622F7349575bee212CFEab40b9edB044711Be"
 const protocol2Address2BNBTestnet = "0x8604d996ebB5180da6674Df3c98238a5F2c27B3C"
+const verifierAddressBNBTestnet = "0xa0cff663BaD972fD5a433Fc7F023FD7f4aD8E60c"
 
 
-let protocol2Address1Src;
+let protocol2Address1Src = protocol2Address1Goerli;
 let protocol2Address2Src;
-let transferContract1Src;
-let transferContract2Src;
+let verifierAddressSrc;
+let transferContractSrc;
+let transferContractDest;
+let verifierContract;
 let web3;
 let provider;
 let signer;
+
+let prov = new ethers.providers.Web3Provider(window.ethereum);
+prov.send('eth_requestAccounts',[]);
+transferContractSrc = new ethers.Contract(protocol2Address1Src, Protocol2, prov.getSigner());
 
 
 function App() {
   // Hold variables that will interact with our contract and frontend
   const [recipientAddress, setRecipientAddress] = useState(0);      // recipient address
   const [burned, setBurned] = useState(0);                          // address of burn result
+  const [burnHash, setBurnHash] = useState(0)
   const [acc, setAcc] = useState(0)                                 // source address
   const [tokenAmount, setAmount] = useState(0)
   const [currentNetwork, setCurrentNetwork] = useState("")
@@ -67,13 +76,14 @@ function App() {
   window.ethereum.on('accountsChanged', function (accounts) {
     callSetAcc();
   });
-
+  
   const setNetwork = async (t) => {
     let prov = new ethers.providers.Web3Provider(window.ethereum);
     let temp = ((await prov.getNetwork()).chainId)
     if(temp === 5){
         protocol2Address1Src = protocol2Address1Goerli;
-        protocol2Address2Src = protocol2Address2Goerli;
+        protocol2Address2Src = protocol2Address2Goerli; // todo: change to BNB + init
+        verifierAddressSrc = verifierAddressGoerli;
         web3 = web3Goerli;
         provider = providerGoerli;
         signer = signerGoerli;
@@ -81,7 +91,8 @@ function App() {
     }
     else if(temp === 97){
         protocol2Address1Src = protocol2Address1BNBTestnet;
-        protocol2Address2Src = protocol2Address2BNBTestnet;
+        protocol2Address2Src = protocol2Address2BNBTestnet; // todo: change to Goerli + init
+        verifierAddressSrc = verifierAddressBNBTestnet;
         web3 = web3BNBTestnet;
         provider = providerBNBTestnet;
         signer = signerBNBTestnet;
@@ -89,9 +100,26 @@ function App() {
     }
     const account = (await prov.send('eth_requestAccounts'))[0];
     setAcc(account)
-    transferContract1Src = new ethers.Contract(protocol2Address1Src, Protocol2, prov.getSigner());
-    transferContract2Src = new ethers.Contract(protocol2Address2Src, Protocol2, prov.getSigner());
-}
+    transferContractSrc = new ethers.Contract(protocol2Address1Src, Protocol2, prov.getSigner());
+    transferContractDest = new ethers.Contract(protocol2Address2Src, Protocol2, prov.getSigner());
+    verifierContract = new ethers.Contract(verifierAddressSrc, OracleTxInclusionVerifier, prov.getSigner());
+  }
+
+//   transferContractSrc.on("Burn", async (from, to, contract, value)=>{
+//     let transferEvent ={
+//         from: from,
+//         to: to,
+//         value: value,
+//         contract: contract,
+//     }
+//     setTimeout(emptyTimeoutFunction,15000);
+//     burnHandler();
+// })
+
+//   const burnHandler = async (t) => {
+//     document.getElementById("helper1").value = burnHash
+//     const verifyResult = await verifierContract.startOracle(burnHash)
+//   };
 
 const callSetAcc = async (t) => {
     // t.preventDefault();
@@ -101,9 +129,9 @@ const callSetAcc = async (t) => {
   };
 
   const init = async () => {
-    const tC1 = await transferContract1Src.registerTokenContract(protocol2Address2Src);
+    const tC1 = await transferContractSrc.registerTokenContract(protocol2Address2Src);
     await tC1.wait();
-    const tC2 = await transferContract2Src.registerTokenContract(protocol2Address1Src);
+    const tC2 = await transferContractDest.registerTokenContract(protocol2Address1Src);
     await tC2.wait();
   };
   
@@ -111,32 +139,34 @@ const callSetAcc = async (t) => {
     t.preventDefault();
     // await init();
     await getBalance();
-    // await burnTokens();
+    await burnTokens();
     // setTimeout(emptyTimeoutFunction,12000);
     // await claimTokens();
   };
   
   const getBalance = async (t) => {
       // t.preventDefault();    
-      const balance110 = await transferContract1Src.balanceOf(acc)
-      const balance210 = await transferContract2Src.balanceOf(acc)
-      const balance220 = await transferContract2Src.balanceOf(recipientAddress)
+      const balance110 = await transferContractSrc.balanceOf(acc)
+      const balance210 = await transferContractDest.balanceOf(acc)
+      const balance220 = await transferContractDest.balanceOf(recipientAddress)
       document.getElementById("helper").value = balance110
-      document.getElementById("helper1").value = balance210
+      document.getElementById("helper1").value = burnHash
       document.getElementById("helper2").value = (await provider.getNetwork()).chainId
     };
     
     const burnTokens = async (t) => {
         // t.preventDefault();
-        const burnResult = await transferContract1Src.burn(recipientAddress, protocol2Address2Src, tokenAmount, 0)
+        const burnResult = await transferContractSrc.burn(recipientAddress, protocol2Address2Src, tokenAmount, 0)
         await burnResult.wait();
         setBurned(burnResult);
-        const balance111 = await transferContract1Src.balanceOf(acc)
-        const balance211 = await transferContract2Src.balanceOf(acc)
-        const balance221 = await transferContract2Src.balanceOf(recipientAddress)
+        // await setBurnHash(burnResult.hash)
+        const balance111 = await transferContractSrc.balanceOf(acc)
+        const balance211 = await transferContractDest.balanceOf(acc)
+        const balance221 = await transferContractDest.balanceOf(recipientAddress)
         document.getElementById("helper").value = balance111
         document.getElementById("helper1").value = balance211
-        document.getElementById("helper2").value = balance221
+        document.getElementById("helper2").value = burnResult.hash
+        const verifyResult = await verifierContract.startOracle(burnResult.hash)
     };
     
     const claimTokens = async (t) => {
@@ -152,11 +182,11 @@ const callSetAcc = async (t) => {
         const rlpEncodedTxNodes = await createTxMerkleProof(block, tx.transactionIndex);
         const rlpEncodedReceiptNodes = await createReceiptMerkleProof(block, tx.transactionIndex);
         
-        const claimResult = await transferContract2Src.claim(rlpHeader, rlpEncodedTx, rlpEncodedReceipt, rlpEncodedTxNodes, rlpEncodedReceiptNodes, path);
+        const claimResult = await transferContractDest.claim(rlpHeader, rlpEncodedTx, rlpEncodedReceipt, rlpEncodedTxNodes, rlpEncodedReceiptNodes, path);
         await claimResult.wait();
-        const balance112 = await transferContract1Src.balanceOf(acc)
-        const balance212 = await transferContract2Src.balanceOf(acc)
-        const balance222 = await transferContract2Src.balanceOf(recipientAddress)
+        const balance112 = await transferContractSrc.balanceOf(acc)
+        const balance212 = await transferContractDest.balanceOf(acc)
+        const balance222 = await transferContractDest.balanceOf(recipientAddress)
         document.getElementById("helper").value = balance112
         document.getElementById("helper1").value = balance212
         document.getElementById("helper2").value = balance222
