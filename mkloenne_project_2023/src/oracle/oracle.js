@@ -128,7 +128,8 @@ const OracleTxInclusionVerifier = [
         }
       ],
       "stateMutability": "payable",
-      "type": "function"
+      "type": "function",
+      "payable": true
     },
     {
       "inputs": [
@@ -177,7 +178,8 @@ const OracleTxInclusionVerifier = [
         }
       ],
       "stateMutability": "payable",
-      "type": "function"
+      "type": "function",
+      "payable": true
     },
     {
       "inputs": [
@@ -226,7 +228,8 @@ const OracleTxInclusionVerifier = [
         }
       ],
       "stateMutability": "payable",
-      "type": "function"
+      "type": "function",
+      "payable": true
     },
     {
       "inputs": [
@@ -270,7 +273,46 @@ const OracleTxInclusionVerifier = [
         }
       ],
       "stateMutability": "payable",
-      "type": "function"
+      "type": "function",
+      "payable": true
+    },
+    {
+      "inputs": [],
+      "name": "getCurrentBurnBlockHashes",
+      "outputs": [
+        {
+          "internalType": "bytes32[20]",
+          "name": "",
+          "type": "bytes32[20]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [],
+      "name": "getCurrentCounter",
+      "outputs": [
+        {
+          "internalType": "uint256[20]",
+          "name": "_verifyTxResultCounter",
+          "type": "uint256[20]"
+        },
+        {
+          "internalType": "uint256[20]",
+          "name": "_verifyReceiptCounter",
+          "type": "uint256[20]"
+        },
+        {
+          "internalType": "uint256[20]",
+          "name": "_blockConfirmationResultCounter",
+          "type": "uint256[20]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
     }
   ]
 const Protocol2 = [
@@ -799,14 +841,11 @@ const provider = new ethers.providers.Web3Provider(web3.currentProvider);
 // const signer = provider.getSigner();
 const signer = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", provider)
 
-const verifierAddressGoerli = "0xDFabC31177166199B18D92B76b7AE158D76dAd8C"
-const protocol2Address1Goerli = "0x302eE5A43e22cdB88440070717b94F9821C64182"
+const verifierAddressGoerli = "0x347B35b8813a8DE2AB4caa5f0DbbFcB374C13549"
 
 const verifierAddressBNBTestnet = "0xa0cff663BaD972fD5a433Fc7F023FD7f4aD8E60c"
-const protocol2Address1BNBTestnet = "0x072622F7349575bee212CFEab40b9edB044711Be"
 
 const verifierContract = new ethers.Contract(verifierAddressGoerli, OracleTxInclusionVerifier, signer);
-const transferContract1 = new ethers.Contract(protocol2Address1Goerli, Protocol2, signer);
 
 let blockConfirmed = false;
 let transactionVerified = false;
@@ -815,16 +854,16 @@ let receiptVerified = false;
 start();
 
 async function start(){
-    console.log("Start")
-    verifierContract.on("StartOracle", async (blockHash)=>{
-        
-        console.log(JSON.stringify(blockHash, null, 4))
-        await question1();
-        await question2();
-        await question3();
-        await verifierContract.fromOracle(transactionVerified, receiptVerified, blockConfirmed, blockHash);
-        console.log("Response sent");
-    })
+        console.log("Start")
+        verifierContract.on("StartOracle", async (blockHash)=>{
+            
+            console.log(JSON.stringify(blockHash, null, 4))
+            await question1();
+            await question2();
+            await question3();
+            await verifierContract.fromOracle(transactionVerified, receiptVerified, blockConfirmed, blockHash);
+            console.log("Response sent");
+        })
 }
 
 
@@ -861,3 +900,10 @@ const question3 = () => {
         })
     })
 }
+// 0xf2a8b9b388fe1419e457a28f13bd497dd1e9b6ee4c91534591d6cbe874593dbd
+
+// 0x595e05ac15ac41a3c15342fec3f4032db79418f7fff4377f2bd147f2cd19572b,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000
+
+// 0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+// 0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+// 0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0

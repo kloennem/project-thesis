@@ -20,19 +20,17 @@ const {
 // for Görli
 const web3Goerli = new Web3(new Web3.providers.HttpProvider("https://goerli.infura.io/v3/2e342128028646b9b9ea1ef796849e23"))
 const providerGoerli = new ethers.providers.Web3Provider(web3Goerli.currentProvider);
-const signerGoerli = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", providerGoerli)
 
 // for BNB Testnet
 const web3BNBTestnet = new Web3(new Web3.providers.HttpProvider('https://data-seed-prebsc-1-s1.binance.org:8545'))
 const providerBNBTestnet = new ethers.providers.Web3Provider(web3BNBTestnet.currentProvider);
-const signerBNBTestnet = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", providerBNBTestnet)
 
 
 // Contract addresses of the deployed smart contract
 // for Görli
-const protocol2Address1Goerli = "0x40f94B9EecE9DE0892D124C698fBD6FA36c3f80b"
-const protocol2Address2Goerli = "0xb9B56965B0522C674E97e10Acffa7ae28024cD7c"
-const verifierAddressGoerli = "0xDFabC31177166199B18D92B76b7AE158D76dAd8C"
+const protocol2Address1Goerli = "0x7C7F1198B9ab313e3301e1AE4fc49b0b6217D847"
+const protocol2Address2Goerli = "0xa43792C0ACe60ad9E55142B4f00BfB206c1f53aE"
+const verifierAddressGoerli = "0x347B35b8813a8DE2AB4caa5f0DbbFcB374C13549"
 
 // for BNB Testnet
 const protocol2Address1BNBTestnet = "0x072622F7349575bee212CFEab40b9edB044711Be"
@@ -42,24 +40,23 @@ const verifierAddressBNBTestnet = "0xa0cff663BaD972fD5a433Fc7F023FD7f4aD8E60c"
 
 let protocol2Address1Src = protocol2Address1Goerli;
 let protocol2Address2Src;
-let verifierAddressSrc;
+let verifierAddressSrc = verifierAddressGoerli;
 let transferContractSrc;
 let transferContractDest;
 let verifierContract;
 let web3;
 let provider;
-let signer;
 
 let prov = new ethers.providers.Web3Provider(window.ethereum);
 prov.send('eth_requestAccounts',[]);
 transferContractSrc = new ethers.Contract(protocol2Address1Src, Protocol2, prov.getSigner());
+verifierContract = new ethers.Contract(verifierAddressSrc, OracleTxInclusionVerifier, prov.getSigner());
 
 
 function App() {
   // Hold variables that will interact with our contract and frontend
   const [recipientAddress, setRecipientAddress] = useState(0);      // recipient address
   const [burned, setBurned] = useState(0);                          // address of burn result
-  const [burnHash, setBurnHash] = useState(0)
   const [acc, setAcc] = useState(0)                                 // source address
   const [tokenAmount, setAmount] = useState(0)
   const [currentNetwork, setCurrentNetwork] = useState("")
@@ -78,7 +75,7 @@ function App() {
   });
   
   const setNetwork = async (t) => {
-    let prov = new ethers.providers.Web3Provider(window.ethereum);
+    prov = new ethers.providers.Web3Provider(window.ethereum);
     let temp = ((await prov.getNetwork()).chainId)
     if(temp === 5){
         protocol2Address1Src = protocol2Address1Goerli;
@@ -86,7 +83,6 @@ function App() {
         verifierAddressSrc = verifierAddressGoerli;
         web3 = web3Goerli;
         provider = providerGoerli;
-        signer = signerGoerli;
         setCurrentNetwork("Görli");
     }
     else if(temp === 97){
@@ -95,7 +91,6 @@ function App() {
         verifierAddressSrc = verifierAddressBNBTestnet;
         web3 = web3BNBTestnet;
         provider = providerBNBTestnet;
-        signer = signerBNBTestnet;
         setCurrentNetwork("BNB Testnet");
     }
     const account = (await prov.send('eth_requestAccounts'))[0];
@@ -123,7 +118,7 @@ function App() {
 
 const callSetAcc = async (t) => {
     // t.preventDefault();
-    let prov = new ethers.providers.Web3Provider(window.ethereum);
+    prov = new ethers.providers.Web3Provider(window.ethereum);
     const account = (await prov.send('eth_requestAccounts'))[0];
     setAcc(account)
   };
@@ -138,10 +133,11 @@ const callSetAcc = async (t) => {
   const startTransaction = async (t) => {
     t.preventDefault();
     // await init();
-    await getBalance();
-    await burnTokens();
-    // setTimeout(emptyTimeoutFunction,12000);
-    // await claimTokens();
+    // await getBalance();
+    // await burnTokens();
+    claimTokens();
+    // let temp = await verifierContract.getCurrentCounter();
+    // document.getElementById("helper2").value = temp
   };
   
   const getBalance = async (t) => {
@@ -150,7 +146,7 @@ const callSetAcc = async (t) => {
       const balance210 = await transferContractDest.balanceOf(acc)
       const balance220 = await transferContractDest.balanceOf(recipientAddress)
       document.getElementById("helper").value = balance110
-      document.getElementById("helper1").value = burnHash
+      document.getElementById("helper1").value = balance210
       document.getElementById("helper2").value = (await provider.getNetwork()).chainId
     };
     
@@ -159,15 +155,19 @@ const callSetAcc = async (t) => {
         const burnResult = await transferContractSrc.burn(recipientAddress, protocol2Address2Src, tokenAmount, 0)
         await burnResult.wait();
         setBurned(burnResult);
-        // await setBurnHash(burnResult.hash)
         const balance111 = await transferContractSrc.balanceOf(acc)
         const balance211 = await transferContractDest.balanceOf(acc)
         const balance221 = await transferContractDest.balanceOf(recipientAddress)
         document.getElementById("helper").value = balance111
         document.getElementById("helper1").value = balance211
         document.getElementById("helper2").value = burnResult.hash
-        const verifyResult = await verifierContract.startOracle(burnResult.hash)
+        await verifierContract.startOracle(burnResult.hash)
     };
+    
+    verifierContract.on("OraclePositive", async (currentHash)=>{
+        document.getElementById("helper2").value = "success"+currentHash;
+        claimTokens();
+    })
     
     const claimTokens = async (t) => {
         // t.preventDefault();
@@ -225,8 +225,6 @@ const createTxMerkleProof = async (block, transactionIndex) => {
         document.getElementById("destAddr").value = acc
         setRecipientAddress(acc)
     };
-  
-    const emptyTimeoutFunction = async (t) => {}
     
     return (
         <div className="main">

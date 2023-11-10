@@ -641,7 +641,8 @@ export const OracleTxInclusionVerifier = [
         }
       ],
       "stateMutability": "payable",
-      "type": "function"
+      "type": "function",
+      "payable": true
     },
     {
       "inputs": [
@@ -690,7 +691,8 @@ export const OracleTxInclusionVerifier = [
         }
       ],
       "stateMutability": "payable",
-      "type": "function"
+      "type": "function",
+      "payable": true
     },
     {
       "inputs": [
@@ -739,7 +741,8 @@ export const OracleTxInclusionVerifier = [
         }
       ],
       "stateMutability": "payable",
-      "type": "function"
+      "type": "function",
+      "payable": true
     },
     {
       "inputs": [
@@ -783,6 +786,45 @@ export const OracleTxInclusionVerifier = [
         }
       ],
       "stateMutability": "payable",
-      "type": "function"
+      "type": "function",
+      "payable": true
+    },
+    {
+      "inputs": [],
+      "name": "getCurrentBurnBlockHashes",
+      "outputs": [
+        {
+          "internalType": "bytes32[20]",
+          "name": "",
+          "type": "bytes32[20]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [],
+      "name": "getCurrentCounter",
+      "outputs": [
+        {
+          "internalType": "uint256[20]",
+          "name": "_verifyTxResultCounter",
+          "type": "uint256[20]"
+        },
+        {
+          "internalType": "uint256[20]",
+          "name": "_verifyReceiptCounter",
+          "type": "uint256[20]"
+        },
+        {
+          "internalType": "uint256[20]",
+          "name": "_blockConfirmationResultCounter",
+          "type": "uint256[20]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
     }
   ]

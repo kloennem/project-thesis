@@ -11,9 +11,9 @@ contract OracleTxInclusionVerifier{
     mapping(bytes32 => bool) verifyReceiptResult;
     mapping(bytes32 => bool) blockConfirmationResult;
 
-    uint verifyTxResultCounter = 0;
-    uint verifyReceiptCounter = 0;
-    uint blockConfirmationResultCounter = 0;
+    uint[20] verifyTxResultCounter;
+    uint[20] verifyReceiptCounter;
+    uint[20] blockConfirmationResultCounter;
 
     address[10] oracles;
 
@@ -22,12 +22,12 @@ contract OracleTxInclusionVerifier{
     }
 
     function startOracle(bytes32 _currentBurnBlockHash) public {
-        for(uint i=1; i<=20; i++){
+        for(uint i=0; i<20; i++){
             if(currentBurnBlockHash[i] == 0){
                 currentBurnBlockHash[i] = _currentBurnBlockHash;
                 blockHashIndex[_currentBurnBlockHash] = i;
                 emit StartOracle(_currentBurnBlockHash);
-                break;
+                return;
             }
         }
         if(blockHashIndex[_currentBurnBlockHash]==0){
@@ -37,27 +37,27 @@ contract OracleTxInclusionVerifier{
 
     function fromOracle(bool _verifyTxResult, bool _verifyReceiptResult, bool _blockConfirmationResult, bytes32 _currentBurnBlockHash) public {
         bytes32 index = currentBurnBlockHash[blockHashIndex[_currentBurnBlockHash]];
-        for(uint i=1; i<10; i++){
+        for(uint i=0; i<10; i++){
             if(msg.sender == oracles[i]){
                 if(_verifyTxResult == true){
-                    verifyTxResultCounter++;
+                    verifyTxResultCounter[blockHashIndex[_currentBurnBlockHash]]++;
                 }
                 if(_verifyReceiptResult == true){
-                    verifyReceiptCounter++;
+                    verifyReceiptCounter[blockHashIndex[_currentBurnBlockHash]]++;
                 }
                 if(_blockConfirmationResult == true){
-                    blockConfirmationResultCounter++;
+                    blockConfirmationResultCounter[blockHashIndex[_currentBurnBlockHash]]++;
                 }
                 break;
             }
         }
-        if(verifyTxResultCounter>=1&&verifyTxResult[index]!=true){
+        if(verifyTxResultCounter[blockHashIndex[_currentBurnBlockHash]]>=1&&verifyTxResult[index]!=true){
             verifyTxResult[index] = true;
         }
-        if(verifyReceiptCounter>=1&&verifyReceiptResult[index]!=true){
+        if(verifyReceiptCounter[blockHashIndex[_currentBurnBlockHash]]>=1&&verifyReceiptResult[index]!=true){
             verifyReceiptResult[index] = true;
         }
-        if(blockConfirmationResultCounter>=1&&blockConfirmationResult[index]!=true){
+        if(blockConfirmationResultCounter[blockHashIndex[_currentBurnBlockHash]]>=1&&blockConfirmationResult[index]!=true){
             blockConfirmationResult[index] = true;
         }
         if(verifyTxResult[index]&&verifyReceiptResult[index]&&blockConfirmationResult[index]){
@@ -83,6 +83,14 @@ contract OracleTxInclusionVerifier{
     function verifyState(uint /*feeInWei*/, bytes memory /*rlpHeader*/, uint8 /*noOfConfirmations*/, bytes memory /*rlpEncodedState*/,
         bytes memory /*path*/, bytes memory /*rlpEncodedNodes*/) payable public returns (uint8) {
         return 0;
+    }
+
+    function getCurrentBurnBlockHashes() public view returns (bytes32[20] memory) {
+        return currentBurnBlockHash;
+    }
+
+    function getCurrentCounter() public view returns (uint[20] memory _verifyTxResultCounter, uint[20] memory _verifyReceiptCounter,uint[20] memory _blockConfirmationResultCounter) {
+        return (verifyTxResultCounter, verifyReceiptCounter, blockConfirmationResultCounter);
     }
 
     event StartOracle(bytes32 indexed burnBlockHash);
