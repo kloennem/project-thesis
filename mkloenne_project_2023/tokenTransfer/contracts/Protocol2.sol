@@ -11,16 +11,6 @@ contract Protocol2 is ERC20 {
     using RLPReader for RLPReader.Iterator;
     using RLPReader for bytes;
 
-    uint256 storedData;
-
-    function set(uint256 x) public {
-        storedData = x;
-    }
-
-    function get() public view returns (uint256) {
-        return storedData;
-    }
-
     struct ClaimData {
         address burnContract;   // the contract which has burnt the tokens on the other blockchian
         address sender;         // sender on the burn token contract
@@ -52,7 +42,7 @@ contract Protocol2 is ERC20 {
                                            // If the claim is posted after this period, the client submitting the claim gets the fees.
     uint constant FAIR_CONFIRM_PERIOD = 45; // similar to FAIR_CLAIM_PERIOD but intended for confirm tx
 
-    bytes32 txHash; //if local, stack too deep error
+    uint fee;
 
     constructor(address[] memory tokenContracts, address txInclVerifier, uint initialSupply) ERC20("TestToken", "TKN") {
         for (uint i = 0; i < tokenContracts.length; i++) {
@@ -83,11 +73,10 @@ contract Protocol2 is ERC20 {
         bytes calldata serializedReceipt,   // serialized receipt of burn tx (burn receipt)
         bytes memory rlpMerkleProofTx,      // rlp-encoded Merkle proof of Membership for burn tx (later passed to relay)
         bytes memory rlpMerkleProofReceipt, // rlp-encoded Merkle proof of Membership for burn receipt (later passed to relay)
-        bytes memory path                   // the path from the root node down to the burn tx/receipt in the corresponding Merkle tries (tx, receipt).
+        bytes memory path,                  // the path from the root node down to the burn tx/receipt in the corresponding Merkle tries (tx, receipt).
                                             // path is the same for both tx and its receipt.
+        bytes32 txHash
     ) public {
-        txHash = keccak256(serializedTx);
-
         require(claimedTransactions[keccak256(serializedTx)] == false, "tokens have already been claimed");
 
         bytes memory rlpEncodedTx = extractRLPEncoding(serializedTx);
@@ -104,7 +93,7 @@ contract Protocol2 is ERC20 {
         // verify inclusion of receipt
         require(txInclusionVerifier.verifyReceipt(0, rlpHeader, REQUIRED_TX_CONFIRMATIONS, serializedReceipt, path, rlpMerkleProofReceipt, txHash) == true, "burn receipt does not exist or has not enough confirmations");
 
-        uint fee = calculateFee(c.value, TRANSFER_FEE);
+        fee = calculateFee(c.value, TRANSFER_FEE);
         uint remainingValue = c.value - fee;
         address feeRecipient = c.recipient;
         if (msg.sender != c.recipient && txInclusionVerifier.isBlockConfirmed(0, keccak256(rlpHeader), FAIR_CLAIM_PERIOD, txHash)) {
@@ -128,12 +117,11 @@ contract Protocol2 is ERC20 {
         bytes calldata serializedReceipt,   // serialized receipt of claim tx ('claim receipt')
         bytes memory rlpMerkleProofTx,      // rlp-encoded Merkle proof of Membership for claim tx (later passed to relay)
         bytes memory rlpMerkleProofReceipt, // rlp-encoded Merkle proof of Membership for claim receipt (later passed to relay)
-        bytes memory path                   // the path from the root node down to the claim tx/receipt in the corresponding Merkle tries (tx, receipt).
+        bytes memory path,                  // the path from the root node down to the claim tx/receipt in the corresponding Merkle tries (tx, receipt).
                                             // path is the same for both tx and its receipt.
+        bytes32 txHash
     ) public {
-
-        txHash = keccak256(serializedTx);
-        require(confirmedClaimTransactions[txHash] == false, "claim tx is already confirmed");
+        require(confirmedClaimTransactions[keccak256(serializedTx)] == false, "claim tx is already confirmed");
 
         ConfirmData memory c = extractConfirm(extractRLPEncoding(serializedTx), extractRLPEncoding(serializedReceipt));
 
@@ -157,11 +145,6 @@ contract Protocol2 is ERC20 {
             stakeRecipient = msg.sender;
         }
         _mint(stakeRecipient, REQUIRED_STAKE);
-    }
-
-    function tester(bytes memory rlpTransaction) public returns (bool) {
-        bool test = rlpTransaction.toRlpItem().isList();
-        return test;
     }
 
     function extractClaim(bytes memory rlpHeader, bytes memory rlpTransaction, bytes memory rlpReceipt) private pure returns (ClaimData memory) {

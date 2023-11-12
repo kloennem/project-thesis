@@ -3,6 +3,7 @@ import Web3 from "web3";
 import { ethers } from "ethers";
 import { Protocol2, OracleTxInclusionVerifier } from "./abi/abi"; 
 import './App.css';
+import { keccak256 } from "ethers/lib/utils";
 
 const RLP = require('rlp');
 const {BaseTrie: Trie} = require('merkle-patricia-tree');
@@ -28,9 +29,9 @@ const providerBNBTestnet = new ethers.providers.Web3Provider(web3BNBTestnet.curr
 
 // Contract addresses of the deployed smart contract
 // for Görli
-const protocol2Address1Goerli = "0x7C7F1198B9ab313e3301e1AE4fc49b0b6217D847"
-const protocol2Address2Goerli = "0xa43792C0ACe60ad9E55142B4f00BfB206c1f53aE"
-const verifierAddressGoerli = "0x347B35b8813a8DE2AB4caa5f0DbbFcB374C13549"
+const protocol2Address1Goerli = "0xAC446Ea847d893F15d8ae12b841C7284300c0627"
+const protocol2Address2Goerli = "0xbb97cbb6860cF6583844709A9f9f035D8811D650"
+const verifierAddressGoerli = "0x7574284933e8a53bf3Ef1c72f39605b685aA58a7"
 
 // for BNB Testnet
 const protocol2Address1BNBTestnet = "0x072622F7349575bee212CFEab40b9edB044711Be"
@@ -46,6 +47,7 @@ let transferContractDest;
 let verifierContract;
 let web3;
 let provider;
+let executed = false;
 
 let prov = new ethers.providers.Web3Provider(window.ethereum);
 prov.send('eth_requestAccounts',[]);
@@ -128,21 +130,24 @@ const callSetAcc = async (t) => {
     await tC1.wait();
     const tC2 = await transferContractDest.registerTokenContract(protocol2Address1Src);
     await tC2.wait();
-  };
-  
-  const startTransaction = async (t) => {
+};
+
+const startTransaction = async (t) => {
     t.preventDefault();
     // await init();
-    // await getBalance();
-    // await burnTokens();
-    claimTokens();
+    await getBalance();
+    await burnTokens();
+    // claimTokens();
     // let temp = await verifierContract.getCurrentCounter();
+    // let temp = await verifierContract.getCurrentBurnBlockHashes();
+    // let burnReceipt = await web3.eth.getTransactionReceipt(burned.hash)
     // document.getElementById("helper2").value = temp
-  };
-  
-  const getBalance = async (t) => {
-      // t.preventDefault();    
-      const balance110 = await transferContractSrc.balanceOf(acc)
+    // document.getElementById("helper1").value = burned.hash
+};
+
+const getBalance = async (t) => {
+    // t.preventDefault();    
+    const balance110 = await transferContractSrc.balanceOf(acc)
       const balance210 = await transferContractDest.balanceOf(acc)
       const balance220 = await transferContractDest.balanceOf(recipientAddress)
       document.getElementById("helper").value = balance110
@@ -152,6 +157,7 @@ const callSetAcc = async (t) => {
     
     const burnTokens = async (t) => {
         // t.preventDefault();
+        executed = false;
         const burnResult = await transferContractSrc.burn(recipientAddress, protocol2Address2Src, tokenAmount, 0)
         await burnResult.wait();
         setBurned(burnResult);
@@ -165,13 +171,23 @@ const callSetAcc = async (t) => {
     };
     
     verifierContract.on("OraclePositive", async (currentHash)=>{
-        document.getElementById("helper2").value = "success"+currentHash;
+        try{
+        document.getElementById("helper2").value = "success";
         claimTokens();
+        } catch(e){}
     })
     
     const claimTokens = async (t) => {
         // t.preventDefault();
-        const block             = await web3.eth.getBlock(burned.blockHash);
+        try{
+        let burnReceipt = await web3.eth.getTransactionReceipt(await burned.hash)
+        while(burnReceipt == null && executed == false){
+            executed = true;
+            burnReceipt = await web3.eth.getTransactionReceipt(burned.hash)
+        }
+        document.getElementById("helper2").value = "executed worked";
+        // document.getElementById("helper2").value = JSON.stringify(burnReceipt, null, 4)
+        const block             = await web3.eth.getBlock(burnReceipt.blockNumber);
         const tx                = await web3.eth.getTransaction(burned.hash);
         const txReceipt         = await web3.eth.getTransactionReceipt(burned.hash);
         const rlpHeader         = createRLPHeader(block);
@@ -182,14 +198,17 @@ const callSetAcc = async (t) => {
         const rlpEncodedTxNodes = await createTxMerkleProof(block, tx.transactionIndex);
         const rlpEncodedReceiptNodes = await createReceiptMerkleProof(block, tx.transactionIndex);
         
-        const claimResult = await transferContractDest.claim(rlpHeader, rlpEncodedTx, rlpEncodedReceipt, rlpEncodedTxNodes, rlpEncodedReceiptNodes, path);
+        document.getElementById("helper").value = "before claim"
+        const claimResult = await transferContractDest.claim(rlpHeader, rlpEncodedTx, rlpEncodedReceipt, rlpEncodedTxNodes, rlpEncodedReceiptNodes, path, burned.hash);
         await claimResult.wait();
+        document.getElementById("helper").value = "after claim"
         const balance112 = await transferContractSrc.balanceOf(acc)
         const balance212 = await transferContractDest.balanceOf(acc)
         const balance222 = await transferContractDest.balanceOf(recipientAddress)
         document.getElementById("helper").value = balance112
         document.getElementById("helper1").value = balance212
         document.getElementById("helper2").value = balance222
+        } catch(e){}
     };
 
 const createTxMerkleProof = async (block, transactionIndex) => {

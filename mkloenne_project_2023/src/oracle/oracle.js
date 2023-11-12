@@ -99,27 +99,12 @@ const OracleTxInclusionVerifier = [
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
           "internalType": "bytes32",
           "name": "_currentBurnBlockHash",
           "type": "bytes32"
         }
       ],
-      "name": "isBlockConfirmed",
+      "name": "getTxResult",
       "outputs": [
         {
           "internalType": "bool",
@@ -127,9 +112,9 @@ const OracleTxInclusionVerifier = [
           "type": "bool"
         }
       ],
-      "stateMutability": "payable",
+      "stateMutability": "view",
       "type": "function",
-      "payable": true
+      "constant": true
     },
     {
       "inputs": [
@@ -220,6 +205,41 @@ const OracleTxInclusionVerifier = [
         }
       ],
       "name": "verifyReceipt",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function",
+      "payable": true
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_currentBurnBlockHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "isBlockConfirmed",
       "outputs": [
         {
           "internalType": "bool",
@@ -841,7 +861,7 @@ const provider = new ethers.providers.Web3Provider(web3.currentProvider);
 // const signer = provider.getSigner();
 const signer = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", provider)
 
-const verifierAddressGoerli = "0x347B35b8813a8DE2AB4caa5f0DbbFcB374C13549"
+const verifierAddressGoerli = "0x7574284933e8a53bf3Ef1c72f39605b685aA58a7"
 
 const verifierAddressBNBTestnet = "0xa0cff663BaD972fD5a433Fc7F023FD7f4aD8E60c"
 
@@ -895,15 +915,9 @@ const question3 = () => {
             if(verifyReceipt == "y"){
                 receiptVerified = true;
             }
-            console.log(`Block Confirmed: ${receiptVerified}`);
+            console.log(`Receipt verified: ${receiptVerified}`);
             resolve()
         })
     })
 }
-// 0xf2a8b9b388fe1419e457a28f13bd497dd1e9b6ee4c91534591d6cbe874593dbd
 
-// 0x595e05ac15ac41a3c15342fec3f4032db79418f7fff4377f2bd147f2cd19572b,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000,0x0000000000000000000000000000000000000000000000000000000000000000
-
-// 0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-// 0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-// 0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
