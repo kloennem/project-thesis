@@ -136,9 +136,10 @@ const callSetAcc = async (t) => {
 
 const startTransaction = async (t) => {
     t.preventDefault();
+    await test();
     // await init();
-    await getBalance();
-    await burnTokens();
+    // await getBalance();
+    // await burnTokens();
     // claimTokens();
     // await verifierContract.startOracle(burned.hash)
     // let temp = await verifierContract.getCurrentCounter();
@@ -147,6 +148,18 @@ const startTransaction = async (t) => {
     // document.getElementById("helper2").value = temp
     // document.getElementById("helper1").value = burned.hash
 };
+const test = async (t) => {
+    fetch("http://localhost:8000/postTest", {
+        method: "POST",
+        body: JSON.stringify({
+            testValue: "halloooo"
+        }),
+        headers: {
+            "Content-type": "application/json; charset=UTF-8"
+        }
+    })
+      .then((res) => res.json())
+}
 
 const getBalance = async (t) => {
     // t.preventDefault();    
