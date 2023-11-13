@@ -11,4 +11,3 @@ module.exports = async function(deployer, network) {
     await deployer.deploy(TokenContract, [], TxInclusionVerifier.address, 100, MetaForwarder.address);
     await deployer.deploy(TokenContract, [], TxInclusionVerifier.address, 100, MetaForwarder.address);
 }
-};

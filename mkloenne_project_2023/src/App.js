@@ -109,7 +109,7 @@ function App() {
     transferContractSrc = new ethers.Contract(protocol2Address1Src, Protocol2, prov.getSigner());
     transferContractDest = new ethers.Contract(protocol2Address2Src, Protocol2, prov.getSigner());
     metaFContract = new ethers.Contract(metaFAddress, MetaForwarder, prov.getSigner());
-  }
+}
 
 //   transferContractSrc.on("Burn", async (from, to, contract, value)=>{
 //     let transferEvent ={
@@ -132,9 +132,9 @@ const callSetAcc = async (t) => {
     prov = new ethers.providers.Web3Provider(window.ethereum);
     const account = (await prov.send('eth_requestAccounts'))[0];
     setAcc(account)
-  };
+};
 
-  const init = async () => {
+const init = async () => {
     const tC1 = await transferContractSrc.registerTokenContract(protocol2Address2Src);
     await tC1.wait();
     const tC2 = await transferContractDest.registerTokenContract(protocol2Address1Src);
@@ -155,7 +155,7 @@ const startTransaction = async (t) => {
     // document.getElementById("helper2").value = temp
     // document.getElementById("helper1").value = burned.hash
 };
-  
+
 const test = async (t) => {
     fetch("http://localhost:8000/postTest", {
         method: "POST",
@@ -166,14 +166,14 @@ const test = async (t) => {
             "Content-type": "application/json; charset=UTF-8"
         }
     })
-      .then((res) => res.json())
+    .then((res) => res.json())
 }
 
 const getBalance = async (t) => {
     // t.preventDefault();    
     const balance110 = await transferContractSrc.balanceOf(acc)
-      const balance210 = await transferContractDest.balanceOf(acc)
-      const balance220 = await transferContractDest.balanceOf(recipientAddress)
+    const balance210 = await transferContractDest.balanceOf(acc)
+    const balance220 = await transferContractDest.balanceOf(recipientAddress)
       document.getElementById("helper").value = balance110
       document.getElementById("helper1").value = balance210
       document.getElementById("helper2").value = (await provider.getNetwork()).chainId
@@ -198,8 +198,8 @@ const getBalance = async (t) => {
         try{
         document.getElementById("helper2").value = "success";
         claimTokens();
-        } catch(e){}
-    })
+    } catch(e){}
+})
     
     const claimTokens = async (t) => {
         // t.preventDefault();
@@ -244,7 +244,7 @@ const getBalance = async (t) => {
             tx.value = (ethers.BigNumber.from(tx.value)).toString();
             tx.gasPrice = (ethers.BigNumber.from(tx.gasPrice)).toString();
             const rlpTx = createRLPTransaction(tx);
-        const key = RLP.encode(i);
+            const key = RLP.encode(i);
         await asyncTriePut(trie, key, rlpTx);
     }
     
@@ -274,57 +274,40 @@ const getBalance = async (t) => {
 
     const signBurn = async (t) => {
         // t.preventDefault();
-        let data = abiCoder.encode(['address', 'address', 'uint', 'uint'], [recipientAddress, protocol2Address2, 2, 0]);
+        let data = abiCoder.encode(['address', 'address', 'uint', 'uint'], [recipientAddress, protocol2Address2Src, tokenAmount, 0]);
         data = data.slice(2,data.length);
         const nonce = await metaFContract.getNonce(acc);
         const function_hex = web3.eth.abi.encodeFunctionSignature('burn(address,address,uint,uint)')
         const Req = {
         from: acc,
-        to: protocol2Address2,
+        to: protocol2Address2Src,
         value: 0,
         gas: 100000,
         nonce: nonce,
         data: function_hex + data
         }
-
+    
         let message = ethers.utils.solidityKeccak256(
             ['address', 'address', 'uint256', 'uint256', 'uint256', 'bytes'],
             [Req.from, Req.to, Req.value, Req.gas, Req.nonce, Req.data] 
         );
     
+        prov = new ethers.providers.Web3Provider(window.ethereum);
+        let signer = prov.getSigner();
         const arrayifyMessage = await ethers.utils.arrayify(message)
         const flatSignature = await signer.signMessage(arrayifyMessage)
-        
-        
-        // const execute = await axios.get(`${'http://127.0.0.1:8545/'}${JSON.stringify(Req)}&signature=${flatSignature}`)
-        // await metaFContract.execute(Req, flatSignature);
-        // const status = await axios.post('http://localhost:5000', {
-            //     Req,
-        //     flatSignature
-        // })
-        // .then(function (response) {
-        //     console.log(response);
-        // })
-        // .catch(function (error) {
-        //     console.log(error);
-        // });
-
-        // var clientServerOptions = {
-        //     url: 'http://localhost:7000',
-        //     body: JSON.stringify(Req, flatSignature),
-        //     method: 'POST',
-        //     headers: {
-            //         'Content-Type': 'application/json'
-            //     }
-            // }
-            // http.request(clientServerOptions, function (error, response) {
-                //     console.log(error,response.body);
-                //     return;
-                // });
-                
-                // document.getElementById("helper2").value = status.header
-                // return execute
-                
+    
+        fetch("http://localhost:8000/postBurn", {
+            method: "POST",
+            body: JSON.stringify({
+                reqStruct: Req,
+                signature: flatSignature
+            }),
+            headers: {
+                "Content-type": "application/json; charset=UTF-8"
+            }
+        })
+          .then((res) => res.json())
     }
 
     return (
