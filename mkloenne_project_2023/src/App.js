@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import Web3 from "web3";
 import { ethers } from "ethers";
-import { Protocol2, OracleTxInclusionVerifier } from "./abi/abi"; 
+import { Protocol2, OracleTxInclusionVerifier, MetaForwarder } from "./abi/abi"; 
 import './App.css';
-import { keccak256 } from "ethers/lib/utils";
+import { AbiCoder } from "ethers/lib/utils";
 
 const RLP = require('rlp');
 const {BaseTrie: Trie} = require('merkle-patricia-tree');
@@ -33,19 +33,22 @@ const signerBNBTestnet = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a3
 const protocol2Address1Goerli = "0xAC446Ea847d893F15d8ae12b841C7284300c0627"
 const protocol2Address2Goerli = "0xbb97cbb6860cF6583844709A9f9f035D8811D650"
 const verifierAddressGoerli = "0x7574284933e8a53bf3Ef1c72f39605b685aA58a7"
+const metaFAddressGoerli = "0x6b18654d0142D3A4918739c8f9342a4e8085B7Ca"
 
 // for BNB Testnet
 const protocol2Address1BNBTestnet = "0x6c657149Eaa9953dBFc44Aa02b8313178B847ce9"
 const protocol2Address2BNBTestnet = "0x73278Fea53Aeb67F9Af194aF53c1159F419a7ccF"
 const verifierAddressBNBTestnet = "0x266642C5F0c69c494437B0E5400E2BEe732A3301"
-
+const metaFAddressBNBTestnet = ""
 
 let protocol2Address1Src = protocol2Address1Goerli;
 let protocol2Address2Src;
 let verifierAddressSrc = verifierAddressGoerli;
+let metaFAddress;
 let transferContractSrc;
 let transferContractDest;
 let verifierContract;
+let metaFContract;
 let web3;
 let provider;
 let executed = false;
@@ -55,7 +58,6 @@ prov.send('eth_requestAccounts',[]);
 transferContractSrc = new ethers.Contract(protocol2Address1Src, Protocol2, prov.getSigner());
 verifierContract = new ethers.Contract(verifierAddressSrc, OracleTxInclusionVerifier, prov.getSigner());
 
-
 function App() {
   // Hold variables that will interact with our contract and frontend
   const [recipientAddress, setRecipientAddress] = useState(0);      // recipient address
@@ -63,6 +65,8 @@ function App() {
   const [acc, setAcc] = useState(0)                                 // source address
   const [tokenAmount, setAmount] = useState(0)
   const [currentNetwork, setCurrentNetwork] = useState("")
+  
+  const abiCoder = new AbiCoder();
 
   useEffect(() => {
     setNetwork();
@@ -84,6 +88,7 @@ function App() {
         protocol2Address1Src = protocol2Address1Goerli;
         protocol2Address2Src = protocol2Address2Goerli; // todo: change to BNB + init
         verifierAddressSrc = verifierAddressGoerli;
+        metaFAddress = metaFAddressGoerli;
         web3 = web3Goerli;
         provider = providerGoerli;
         verifierContract = new ethers.Contract(verifierAddressSrc, OracleTxInclusionVerifier, prov.getSigner());
@@ -93,6 +98,7 @@ function App() {
         protocol2Address1Src = protocol2Address1BNBTestnet;
         protocol2Address2Src = protocol2Address2BNBTestnet; // todo: change to Goerli + init
         verifierAddressSrc = verifierAddressBNBTestnet;
+        metaFAddress = metaFAddressBNBTestnet;
         web3 = web3BNBTestnet;
         provider = providerBNBTestnet;
         verifierContract = new ethers.Contract(verifierAddressSrc, OracleTxInclusionVerifier, signerBNBTestnet);
@@ -102,6 +108,7 @@ function App() {
     setAcc(account)
     transferContractSrc = new ethers.Contract(protocol2Address1Src, Protocol2, prov.getSigner());
     transferContractDest = new ethers.Contract(protocol2Address2Src, Protocol2, prov.getSigner());
+    metaFContract = new ethers.Contract(metaFAddress, MetaForwarder, prov.getSigner());
   }
 
 //   transferContractSrc.on("Burn", async (from, to, contract, value)=>{
@@ -148,6 +155,7 @@ const startTransaction = async (t) => {
     // document.getElementById("helper2").value = temp
     // document.getElementById("helper1").value = burned.hash
 };
+  
 const test = async (t) => {
     fetch("http://localhost:8000/postTest", {
         method: "POST",
@@ -263,7 +271,62 @@ const getBalance = async (t) => {
         document.getElementById("destAddr").value = acc
         setRecipientAddress(acc)
     };
+
+    const signBurn = async (t) => {
+        // t.preventDefault();
+        let data = abiCoder.encode(['address', 'address', 'uint', 'uint'], [recipientAddress, protocol2Address2, 2, 0]);
+        data = data.slice(2,data.length);
+        const nonce = await metaFContract.getNonce(acc);
+        const function_hex = web3.eth.abi.encodeFunctionSignature('burn(address,address,uint,uint)')
+        const Req = {
+        from: acc,
+        to: protocol2Address2,
+        value: 0,
+        gas: 100000,
+        nonce: nonce,
+        data: function_hex + data
+        }
+
+        let message = ethers.utils.solidityKeccak256(
+            ['address', 'address', 'uint256', 'uint256', 'uint256', 'bytes'],
+            [Req.from, Req.to, Req.value, Req.gas, Req.nonce, Req.data] 
+        );
     
+        const arrayifyMessage = await ethers.utils.arrayify(message)
+        const flatSignature = await signer.signMessage(arrayifyMessage)
+        
+        
+        // const execute = await axios.get(`${'http://127.0.0.1:8545/'}${JSON.stringify(Req)}&signature=${flatSignature}`)
+        // await metaFContract.execute(Req, flatSignature);
+        // const status = await axios.post('http://localhost:5000', {
+            //     Req,
+        //     flatSignature
+        // })
+        // .then(function (response) {
+        //     console.log(response);
+        // })
+        // .catch(function (error) {
+        //     console.log(error);
+        // });
+
+        // var clientServerOptions = {
+        //     url: 'http://localhost:7000',
+        //     body: JSON.stringify(Req, flatSignature),
+        //     method: 'POST',
+        //     headers: {
+            //         'Content-Type': 'application/json'
+            //     }
+            // }
+            // http.request(clientServerOptions, function (error, response) {
+                //     console.log(error,response.body);
+                //     return;
+                // });
+                
+                // document.getElementById("helper2").value = status.header
+                // return execute
+                
+    }
+
     return (
         <div className="main">
       
@@ -359,7 +422,7 @@ const getBalance = async (t) => {
             </button>
           </form>
         </div>
-        <div className="row">
+        <div className="row" style={{"width":"70vw"}}>
         <input
                  className="input"
                  type="text"
