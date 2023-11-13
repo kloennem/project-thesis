@@ -2,13 +2,13 @@
 
 const MetaForwarder = artifacts.require("MetaForwarder");
 const TokenContract = artifacts.require("Protocol2");
-const TxInclusionVerifier = artifacts.require("MockedTxInclusionVerifier");
+const TxInclusionVerifier = artifacts.require("OracleTxInclusionVerifier");
+const oracleAddresses = ['0x8d8f171C4E067316eFF3d31c013973b8F4d0a742', '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000', '0x0000000000000000000000000000000000000000']
 
 module.exports = async function(deployer, network) {
-//  deployer.deploy(todo: add contract name);
-    // await deployer.deploy(MetaForwarder);
-    // await deployer.deploy(TxInclusionVerifier, 0, 0, true);
-    // await deployer.deploy(TokenContract, [], TxInclusionVerifier.address, 100, MetaForwarder.address);
-    // await deployer.deploy(TokenContract, [], TxInclusionVerifier.address, 100, MetaForwarder.address);
-    await deployer.deploy(TokenContract, [], '0x0e69Ea27C1cdCF208D320b8B5ca3E9C1EF46339E', 100, '0x6b18654d0142D3A4918739c8f9342a4e8085B7Ca');
+    await deployer.deploy(MetaForwarder);
+    await deployer.deploy(TxInclusionVerifier, oracleAddresses);
+    await deployer.deploy(TokenContract, [], TxInclusionVerifier.address, 100, MetaForwarder.address);
+    await deployer.deploy(TokenContract, [], TxInclusionVerifier.address, 100, MetaForwarder.address);
+}
 };

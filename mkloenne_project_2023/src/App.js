@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Web3 from "web3";
 import { ethers } from "ethers";
-import axios from 'axios';
-import { Protocol2, MetaForwarder } from "./abi/abi"; 
+import { Protocol2, OracleTxInclusionVerifier, MetaForwarder } from "./abi/abi"; 
 import './App.css';
 import { AbiCoder } from "ethers/lib/utils";
 
@@ -17,87 +16,206 @@ const {
     encodeToBuffer
  } = require('./utils');
 
+
 // Access our wallet inside of our dapp
-const web3 = new Web3(Web3.givenProvider);
+// for Görli
+const web3Goerli = new Web3(new Web3.providers.HttpProvider("https://goerli.infura.io/v3/2e342128028646b9b9ea1ef796849e23"))
+const providerGoerli = new ethers.providers.Web3Provider(web3Goerli.currentProvider);
 
-const provider = new ethers.providers.Web3Provider(window.ethereum);
-provider.send("eth_requestAccounts", []);
-const signer = provider.getSigner();
-
-
-// Contract address of the deployed smart contract
-const protocol2Address1 = "0x9c882Bb872C0A4b5f4dc0ED544A26BFb731192E8" // for Görli
-const protocol2Address2 = "0xd21A7E1576AC660040b04B1699ed8c611c2Be72E" // for Görli
-
-// const verilayAddress = "0x9dCa11eF2C1F6E958e2B0bfcACe319a55a7C6D40" // for Görli
-
-const metaFAddress = "0x6b18654d0142D3A4918739c8f9342a4e8085B7Ca"      // for Görli
+// for BNB Testnet
+const web3BNBTestnet = new Web3(new Web3.providers.HttpProvider('https://data-seed-prebsc-1-s1.binance.org:8545'))
+const providerBNBTestnet = new ethers.providers.WebSocketProvider("wss://go.getblock.io/8e10fd3fdea94028b9601386ef306bda");
+const signerBNBTestnet = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", providerBNBTestnet)
 
 
-const transferContract1 = new ethers.Contract(protocol2Address1, Protocol2, signer);
-const transferContract2 = new ethers.Contract(protocol2Address2, Protocol2, signer);
+// Contract addresses of the deployed smart contract
+// for Görli
+const protocol2Address1Goerli = "0xAC446Ea847d893F15d8ae12b841C7284300c0627"
+const protocol2Address2Goerli = "0xbb97cbb6860cF6583844709A9f9f035D8811D650"
+const verifierAddressGoerli = "0x7574284933e8a53bf3Ef1c72f39605b685aA58a7"
+const metaFAddressGoerli = "0x6b18654d0142D3A4918739c8f9342a4e8085B7Ca"
 
-// const verilayContract = new ethers.Contract(verilayAddress, Verilay, signer);
+// for BNB Testnet
+const protocol2Address1BNBTestnet = "0x6c657149Eaa9953dBFc44Aa02b8313178B847ce9"
+const protocol2Address2BNBTestnet = "0x73278Fea53Aeb67F9Af194aF53c1159F419a7ccF"
+const verifierAddressBNBTestnet = "0x266642C5F0c69c494437B0E5400E2BEe732A3301"
+const metaFAddressBNBTestnet = ""
 
-const metaFContract = new ethers.Contract(metaFAddress, MetaForwarder, signer);
+let protocol2Address1Src = protocol2Address1Goerli;
+let protocol2Address2Src;
+let verifierAddressSrc = verifierAddressGoerli;
+let metaFAddress;
+let transferContractSrc;
+let transferContractDest;
+let verifierContract;
+let metaFContract;
+let web3;
+let provider;
+let executed = false;
+
+let prov = new ethers.providers.Web3Provider(window.ethereum);
+prov.send('eth_requestAccounts',[]);
+transferContractSrc = new ethers.Contract(protocol2Address1Src, Protocol2, prov.getSigner());
+verifierContract = new ethers.Contract(verifierAddressSrc, OracleTxInclusionVerifier, prov.getSigner());
 
 function App() {
   // Hold variables that will interact with our contract and frontend
   const [recipientAddress, setRecipientAddress] = useState(0);      // recipient address
   const [burned, setBurned] = useState(0);                          // address of burn result
   const [acc, setAcc] = useState(0)                                 // source address
-  const [data, setData] = useState([]);
+  const [tokenAmount, setAmount] = useState(0)
+  const [currentNetwork, setCurrentNetwork] = useState("")
   
   const abiCoder = new AbiCoder();
 
-//   useEffect(() => {
-//     callSetAcc();
-//   });
+  useEffect(() => {
+    setNetwork();
+  });
+
+  window.ethereum.on('networkChanged', function(networkId){
+    document.getElementById("helper2").value = networkId
+    setNetwork();
+  });
+
+  window.ethereum.on('accountsChanged', function (accounts) {
+    callSetAcc();
+  });
   
-  const callSetAcc = async (t) => {
-    t.preventDefault();
-    const account = (await provider.send('eth_requestAccounts'))[0];
+  const setNetwork = async (t) => {
+    prov = new ethers.providers.Web3Provider(window.ethereum);
+    let temp = ((await prov.getNetwork()).chainId)
+    if(temp === 5){
+        protocol2Address1Src = protocol2Address1Goerli;
+        protocol2Address2Src = protocol2Address2Goerli; // todo: change to BNB + init
+        verifierAddressSrc = verifierAddressGoerli;
+        metaFAddress = metaFAddressGoerli;
+        web3 = web3Goerli;
+        provider = providerGoerli;
+        verifierContract = new ethers.Contract(verifierAddressSrc, OracleTxInclusionVerifier, prov.getSigner());
+        setCurrentNetwork("Görli");
+    }
+    else if(temp === 97){
+        protocol2Address1Src = protocol2Address1BNBTestnet;
+        protocol2Address2Src = protocol2Address2BNBTestnet; // todo: change to Goerli + init
+        verifierAddressSrc = verifierAddressBNBTestnet;
+        metaFAddress = metaFAddressBNBTestnet;
+        web3 = web3BNBTestnet;
+        provider = providerBNBTestnet;
+        verifierContract = new ethers.Contract(verifierAddressSrc, OracleTxInclusionVerifier, signerBNBTestnet);
+        setCurrentNetwork("BNB Testnet");
+    }
+    const account = (await prov.send('eth_requestAccounts'))[0];
+    setAcc(account)
+    transferContractSrc = new ethers.Contract(protocol2Address1Src, Protocol2, prov.getSigner());
+    transferContractDest = new ethers.Contract(protocol2Address2Src, Protocol2, prov.getSigner());
+    metaFContract = new ethers.Contract(metaFAddress, MetaForwarder, prov.getSigner());
+  }
+
+//   transferContractSrc.on("Burn", async (from, to, contract, value)=>{
+//     let transferEvent ={
+//         from: from,
+//         to: to,
+//         value: value,
+//         contract: contract,
+//     }
+//     setTimeout(emptyTimeoutFunction,15000);
+//     burnHandler();
+// })
+
+//   const burnHandler = async (t) => {
+//     document.getElementById("helper1").value = burnHash
+//     const verifyResult = await verifierContract.startOracle(burnHash)
+//   };
+
+const callSetAcc = async (t) => {
+    // t.preventDefault();
+    prov = new ethers.providers.Web3Provider(window.ethereum);
+    const account = (await prov.send('eth_requestAccounts'))[0];
     setAcc(account)
   };
 
-  const startTransaction = async (t) => {
+  const init = async () => {
+    const tC1 = await transferContractSrc.registerTokenContract(protocol2Address2Src);
+    await tC1.wait();
+    const tC2 = await transferContractDest.registerTokenContract(protocol2Address1Src);
+    await tC2.wait();
+};
+
+const startTransaction = async (t) => {
     t.preventDefault();
+    await test();
+    // await init();
     // await getBalance();
-    await burnTokens();
-    // setTimeout(emptyTimeoutFunction,10000);
-    // await claimTokens();
-  };
-//   
-  const getBalance = async (t) => {
-      // t.preventDefault();    
-      const balance110 = await transferContract1.balanceOf(acc)
-      const balance210 = await transferContract2.balanceOf(acc)
-      const balance220 = await transferContract2.balanceOf(recipientAddress)
+    // await burnTokens();
+    // claimTokens();
+    // await verifierContract.startOracle(burned.hash)
+    // let temp = await verifierContract.getCurrentCounter();
+    // let temp = await verifierContract.getCurrentBurnBlockHashes();
+    // let burnReceipt = await web3.eth.getTransactionReceipt(burned.hash)
+    // document.getElementById("helper2").value = temp
+    // document.getElementById("helper1").value = burned.hash
+};
+  
+const test = async (t) => {
+    fetch("http://localhost:8000/postTest", {
+        method: "POST",
+        body: JSON.stringify({
+            testValue: "halloooo"
+        }),
+        headers: {
+            "Content-type": "application/json; charset=UTF-8"
+        }
+    })
+      .then((res) => res.json())
+}
+
+const getBalance = async (t) => {
+    // t.preventDefault();    
+    const balance110 = await transferContractSrc.balanceOf(acc)
+      const balance210 = await transferContractDest.balanceOf(acc)
+      const balance220 = await transferContractDest.balanceOf(recipientAddress)
       document.getElementById("helper").value = balance110
       document.getElementById("helper1").value = balance210
-      document.getElementById("helper2").value = balance220
+      document.getElementById("helper2").value = (await provider.getNetwork()).chainId
     };
     
     const burnTokens = async (t) => {
         // t.preventDefault();
-        // const burnResult = await transferContract1.burn(recipientAddress, protocol2Address2, 2, 0)
-        // await burnResult.wait();
-        const burnResult = signBurn()
-        // setBurned(burnResult);
-        const balance111 = await transferContract1.balanceOf(acc)
-        const balance211 = await transferContract2.balanceOf(acc)
-        const balance221 = await transferContract2.balanceOf(recipientAddress)
+        executed = false;
+        const burnResult = await transferContractSrc.burn(recipientAddress, protocol2Address2Src, tokenAmount, 0)
+        await burnResult.wait();
+        setBurned(burnResult);
+        const balance111 = await transferContractSrc.balanceOf(acc)
+        const balance211 = await transferContractDest.balanceOf(acc)
+        const balance221 = await transferContractDest.balanceOf(recipientAddress)
         document.getElementById("helper").value = balance111
         document.getElementById("helper1").value = balance211
-        // document.getElementById("helper2").value = (await burnResult)
+        document.getElementById("helper2").value = burnResult.hash
+        await verifierContract.startOracle(burnResult.hash)
     };
+    
+    verifierContract.on("OraclePositive", async (currentHash)=>{
+        try{
+        document.getElementById("helper2").value = "success";
+        claimTokens();
+        } catch(e){}
+    })
     
     const claimTokens = async (t) => {
         // t.preventDefault();
-        const block             = await web3.eth.getBlock(burned.blockHash);
-        const tx                = await web3.eth.getTransaction(burned.hash);
+        try{
+        let burnReceipt = await web3.eth.getTransactionReceipt(await burned.hash)
+        while(burnReceipt == null && executed == false){
+            executed = true;
+            burnReceipt = await web3.eth.getTransactionReceipt(burned.hash)
+        }
+        document.getElementById("helper2").value = "executed worked";
+        const block             = await web3.eth.getBlock(burnReceipt.blockNumber);
+        const tx                = await provider.getTransaction(burned.hash);
         const txReceipt         = await web3.eth.getTransactionReceipt(burned.hash);
         const rlpHeader         = createRLPHeader(block);
+        tx.value = (ethers.BigNumber.from(tx.value)).toString();
+        tx.gasPrice = (ethers.BigNumber.from(tx.gasPrice)).toString();
         const rlpEncodedTx      = createRLPTransaction(tx);
         const rlpEncodedReceipt = createRLPReceipt(txReceipt);
         
@@ -105,22 +223,27 @@ function App() {
         const rlpEncodedTxNodes = await createTxMerkleProof(block, tx.transactionIndex);
         const rlpEncodedReceiptNodes = await createReceiptMerkleProof(block, tx.transactionIndex);
         
-        const claimResult = await transferContract2.claim(rlpHeader, rlpEncodedTx, rlpEncodedReceipt, rlpEncodedTxNodes, rlpEncodedReceiptNodes, path);
+        document.getElementById("helper").value = "before claim"
+        const claimResult = await transferContractDest.claim(rlpHeader, rlpEncodedTx, rlpEncodedReceipt, rlpEncodedTxNodes, rlpEncodedReceiptNodes, path, burned.hash);
         await claimResult.wait();
-        const balance112 = await transferContract1.balanceOf(acc)
-        const balance212 = await transferContract2.balanceOf(acc)
-        const balance222 = await transferContract2.balanceOf(recipientAddress)
+        document.getElementById("helper").value = "after claim"
+        const balance112 = await transferContractSrc.balanceOf(acc)
+        const balance212 = await transferContractDest.balanceOf(acc)
+        const balance222 = await transferContractDest.balanceOf(recipientAddress)
         document.getElementById("helper").value = balance112
         document.getElementById("helper1").value = balance212
         document.getElementById("helper2").value = balance222
+        } catch(e){}
     };
-
-const createTxMerkleProof = async (block, transactionIndex) => {
-    const trie = newTrie();
-
-    for (let i=0; i<block.transactions.length; i++) {
-        const tx = await web3.eth.getTransaction(block.transactions[i]);
-        const rlpTx = createRLPTransaction(tx);
+    
+    const createTxMerkleProof = async (block, transactionIndex) => {
+        const trie = newTrie();
+        
+        for (let i=0; i<block.transactions.length; i++) {
+            const tx = await provider.getTransaction(block.transactions[i]);
+            tx.value = (ethers.BigNumber.from(tx.value)).toString();
+            tx.gasPrice = (ethers.BigNumber.from(tx.gasPrice)).toString();
+            const rlpTx = createRLPTransaction(tx);
         const key = RLP.encode(i);
         await asyncTriePut(trie, key, rlpTx);
     }
@@ -148,9 +271,6 @@ const createTxMerkleProof = async (block, transactionIndex) => {
         document.getElementById("destAddr").value = acc
         setRecipientAddress(acc)
     };
-  
-    const emptyTimeoutFunction = async (t) => {}
-
 
     const signBurn = async (t) => {
         // t.preventDefault();
@@ -231,12 +351,10 @@ const createTxMerkleProof = async (block, transactionIndex) => {
           <div class="box">
             <form className="form" style={{"float":"left"}}>
               <label>
-                Choose source Blockchain:
+                Source Blockchain:
+                <br />
+                {currentNetwork}
               </label>
-              <select name="chains" style={{"width":"300px"}}>
-                <option selected="selected" value="goerli">Görli</option>
-                <option value="sepolia">Sepolia</option>
-              </select>
             </form>
             <form className="form" style={{"float":"right"}}>
               <label>
@@ -244,7 +362,7 @@ const createTxMerkleProof = async (block, transactionIndex) => {
               </label>
               <select name="chains" style={{"width":"300px"}}>
                 <option selected="selected" value="goerli">Görli</option>
-                <option value="sepolia">Sepolia</option>
+                <option value="bnb_testnet">BNB Testnet</option>
               </select>
             </form>
           </div>
@@ -287,8 +405,10 @@ const createTxMerkleProof = async (block, transactionIndex) => {
               </label>
               <input
                className="input"
-               type="text"
-               name="name"
+               type="number"
+               name="amount"
+               id="amount"
+               onChange={(t) => setAmount(t.target.value)}
               />
             </form>
           </div>

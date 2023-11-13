@@ -42,8 +42,8 @@ const createRLPTransaction = (tx, chainId) => {
         "r": tx.r,
         "s": tx.s,
         "type": tx.type,
-        "maxPriorityFeePerGas": new BN(tx.maxPriorityFeePerGas),
-        "maxFeePerGas": new BN(tx.maxFeePerGas),
+        "maxPriorityFeePerGas": new BN(0),
+        "maxFeePerGas": new BN(0),
         chainId,
         "accessList": tx.accessList,
     };

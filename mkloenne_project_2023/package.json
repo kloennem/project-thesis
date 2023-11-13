@@ -12,7 +12,6 @@
         "@testing-library/react": "^13.4.0",
         "@testing-library/user-event": "^13.5.0",
         "@truffle/hdwallet-provider": "^2.1.10",
-        "axios": "^1.6.0",
         "babel-jest": "^27.4.2",
         "babel-loader": "^8.2.3",
         "babel-plugin-named-asset-import": "^0.3.8",
@@ -102,7 +101,6 @@
         ]
     },
     "devDependencies": {
-        "hardhat": "^2.19.0",
         "react-error-overlay": "6.0.9"
     },
     "jest": {
@@ -160,6 +158,4 @@
         "presets": [
             "react-app"
         ]
-    },
-    "proxy": "http://localhost:5000"
 }
