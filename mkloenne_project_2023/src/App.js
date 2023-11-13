@@ -137,9 +137,9 @@ const callSetAcc = async (t) => {
 const startTransaction = async (t) => {
     t.preventDefault();
     // await init();
-    // await getBalance();
-    // await burnTokens();
-    claimTokens();
+    await getBalance();
+    await burnTokens();
+    // claimTokens();
     // await verifierContract.startOracle(burned.hash)
     // let temp = await verifierContract.getCurrentCounter();
     // let temp = await verifierContract.getCurrentBurnBlockHashes();
@@ -182,7 +182,7 @@ const getBalance = async (t) => {
     
     const claimTokens = async (t) => {
         // t.preventDefault();
-        // try{
+        try{
         let burnReceipt = await web3.eth.getTransactionReceipt(await burned.hash)
         while(burnReceipt == null && executed == false){
             executed = true;
@@ -190,13 +190,14 @@ const getBalance = async (t) => {
         }
         document.getElementById("helper2").value = "executed worked";
         const block             = await web3.eth.getBlock(burnReceipt.blockNumber);
-        const tx                = await web3.eth.getTransaction(burned.hash);
+        const tx                = await provider.getTransaction(burned.hash);
         const txReceipt         = await web3.eth.getTransactionReceipt(burned.hash);
         const rlpHeader         = createRLPHeader(block);
+        tx.value = (ethers.BigNumber.from(tx.value)).toString();
+        tx.gasPrice = (ethers.BigNumber.from(tx.gasPrice)).toString();
         const rlpEncodedTx      = createRLPTransaction(tx);
         const rlpEncodedReceipt = createRLPReceipt(txReceipt);
         
-        document.getElementById("helper1").value = block.transactions.length
         const path = encodeToBuffer(tx.transactionIndex);
         const rlpEncodedTxNodes = await createTxMerkleProof(block, tx.transactionIndex);
         const rlpEncodedReceiptNodes = await createReceiptMerkleProof(block, tx.transactionIndex);
@@ -211,15 +212,17 @@ const getBalance = async (t) => {
         document.getElementById("helper").value = balance112
         document.getElementById("helper1").value = balance212
         document.getElementById("helper2").value = balance222
-        // } catch(e){}
+        } catch(e){}
     };
-
-const createTxMerkleProof = async (block, transactionIndex) => {
-    const trie = newTrie();
-
-    for (let i=0; i<block.transactions.length; i++) {
-        const tx = await web3.eth.getTransaction(block.transactions[i]);
-        const rlpTx = createRLPTransaction(tx);
+    
+    const createTxMerkleProof = async (block, transactionIndex) => {
+        const trie = newTrie();
+        
+        for (let i=0; i<block.transactions.length; i++) {
+            const tx = await provider.getTransaction(block.transactions[i]);
+            tx.value = (ethers.BigNumber.from(tx.value)).toString();
+            tx.gasPrice = (ethers.BigNumber.from(tx.gasPrice)).toString();
+            const rlpTx = createRLPTransaction(tx);
         const key = RLP.encode(i);
         await asyncTriePut(trie, key, rlpTx);
     }
