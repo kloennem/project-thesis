@@ -99,26 +99,6 @@ const OracleTxInclusionVerifier = [
     {
       "inputs": [
         {
-          "internalType": "bytes32",
-          "name": "_currentBurnBlockHash",
-          "type": "bytes32"
-        }
-      ],
-      "name": "getTxResult",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function",
-      "constant": true
-    },
-    {
-      "inputs": [
-        {
           "internalType": "uint256",
           "name": "",
           "type": "uint256"
@@ -163,8 +143,7 @@ const OracleTxInclusionVerifier = [
         }
       ],
       "stateMutability": "payable",
-      "type": "function",
-      "payable": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -213,8 +192,7 @@ const OracleTxInclusionVerifier = [
         }
       ],
       "stateMutability": "payable",
-      "type": "function",
-      "payable": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -248,8 +226,7 @@ const OracleTxInclusionVerifier = [
         }
       ],
       "stateMutability": "payable",
-      "type": "function",
-      "payable": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -293,8 +270,7 @@ const OracleTxInclusionVerifier = [
         }
       ],
       "stateMutability": "payable",
-      "type": "function",
-      "payable": true
+      "type": "function"
     },
     {
       "inputs": [],
@@ -307,8 +283,7 @@ const OracleTxInclusionVerifier = [
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [],
@@ -331,8 +306,7 @@ const OracleTxInclusionVerifier = [
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     }
   ]
 
@@ -342,14 +316,13 @@ const signer = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1c
 
 const web3BNBTestnet = new Web3(new Web3.providers.HttpProvider('https://data-seed-prebsc-1-s1.binance.org:8545'))
 const providerBNBTestnet = new ethers.providers.WebSocketProvider("wss://go.getblock.io/8e10fd3fdea94028b9601386ef306bda");
-
 const signerBNBTestnet = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", providerBNBTestnet)
 
-const verifierAddressGoerli = "0x7574284933e8a53bf3Ef1c72f39605b685aA58a7"
+const verifierAddressGoerli = "0x6fa64A3fBeD62945F17301f1330a769262f236e5"
 
 const verifierAddressBNBTestnet = "0x266642C5F0c69c494437B0E5400E2BEe732A3301"
 
-const verifierContract = new ethers.Contract(verifierAddressBNBTestnet, OracleTxInclusionVerifier, signerBNBTestnet);
+const verifierContract = new ethers.Contract(verifierAddressGoerli, OracleTxInclusionVerifier, signer);
 
 let blockConfirmed = false;
 let transactionVerified = false;

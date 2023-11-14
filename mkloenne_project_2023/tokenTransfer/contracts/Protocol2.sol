@@ -63,7 +63,7 @@ contract Protocol2 is ERC20 {
     }
 
     function isTrustedForwarder(address forwarder) public view returns(bool) {
-        return forwarder == _trustedForwarder;
+        return forwarder == trustedForwarder;
     }
 
     function msgSender() internal view returns (address payable signer) {
@@ -82,7 +82,7 @@ contract Protocol2 is ERC20 {
         require(recipient != address(0), "recipient address must not be zero address");
         require(participatingTokenContracts[claimContract] == true, "claim contract address is not registered");
         require(stake == REQUIRED_STAKE, 'provided stake does not match required stake');
-        sender = msgSender();
+        sender = msg.sender;
         _burn(sender, value + stake);
         emit Burn(sender, recipient, claimContract, value);
     }

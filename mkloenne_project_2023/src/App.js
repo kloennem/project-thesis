@@ -30,10 +30,10 @@ const signerBNBTestnet = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a3
 
 // Contract addresses of the deployed smart contract
 // for Görli
-const protocol2Address1Goerli = "0xAC446Ea847d893F15d8ae12b841C7284300c0627"
-const protocol2Address2Goerli = "0xbb97cbb6860cF6583844709A9f9f035D8811D650"
-const verifierAddressGoerli = "0x7574284933e8a53bf3Ef1c72f39605b685aA58a7"
-const metaFAddressGoerli = "0x6b18654d0142D3A4918739c8f9342a4e8085B7Ca"
+const protocol2Address1Goerli = "0x4f35a9C03d2849efE04DA325C6DeE1cD9d23F53b"
+const protocol2Address2Goerli = "0xdd3484c0BBCC91e1c997537583E3F533D35f837e"
+const verifierAddressGoerli = "0x6fa64A3fBeD62945F17301f1330a769262f236e5"
+const metaFAddressGoerli = "0x819A2B3851b933b31647C5911C8560a53E7a7701"
 
 // for BNB Testnet
 const protocol2Address1BNBTestnet = "0x6c657149Eaa9953dBFc44Aa02b8313178B847ce9"
@@ -42,7 +42,7 @@ const verifierAddressBNBTestnet = "0x266642C5F0c69c494437B0E5400E2BEe732A3301"
 const metaFAddressBNBTestnet = ""
 
 let protocol2Address1Src = protocol2Address1Goerli;
-let protocol2Address2Src;
+let protocol2Address2Src = protocol2Address2Goerli;
 let verifierAddressSrc = verifierAddressGoerli;
 let metaFAddress;
 let transferContractSrc;
@@ -56,6 +56,7 @@ let executed = false;
 let prov = new ethers.providers.Web3Provider(window.ethereum);
 prov.send('eth_requestAccounts',[]);
 transferContractSrc = new ethers.Contract(protocol2Address1Src, Protocol2, prov.getSigner());
+transferContractDest = new ethers.Contract(protocol2Address2Src, Protocol2, prov.getSigner());
 verifierContract = new ethers.Contract(verifierAddressSrc, OracleTxInclusionVerifier, prov.getSigner());
 
 function App() {
@@ -111,21 +112,14 @@ function App() {
     metaFContract = new ethers.Contract(metaFAddress, MetaForwarder, prov.getSigner());
 }
 
-//   transferContractSrc.on("Burn", async (from, to, contract, value)=>{
-//     let transferEvent ={
-//         from: from,
-//         to: to,
-//         value: value,
-//         contract: contract,
-//     }
-//     setTimeout(emptyTimeoutFunction,15000);
-//     burnHandler();
-// })
-
-//   const burnHandler = async (t) => {
-//     document.getElementById("helper1").value = burnHash
-//     const verifyResult = await verifierContract.startOracle(burnHash)
-//   };
+  transferContractDest.on("Claim", async (burnContract, sender, burnTime)=>{
+    const balance110 = await transferContractSrc.balanceOf(acc)
+    const balance210 = await transferContractDest.balanceOf(acc)
+    const balance220 = await transferContractDest.balanceOf(recipientAddress)
+    document.getElementById("helper").value = balance110
+    document.getElementById("helper1").value = balance210
+    document.getElementById("helper2").value = balance220
+  })
 
 const callSetAcc = async (t) => {
     // t.preventDefault();
@@ -143,11 +137,9 @@ const init = async () => {
 
 const startTransaction = async (t) => {
     t.preventDefault();
-    await test();
     // await init();
-    // await getBalance();
-    // await burnTokens();
-    // claimTokens();
+    await getBalance();
+    await signBurn();
     // await verifierContract.startOracle(burned.hash)
     // let temp = await verifierContract.getCurrentCounter();
     // let temp = await verifierContract.getCurrentBurnBlockHashes();
@@ -155,19 +147,6 @@ const startTransaction = async (t) => {
     // document.getElementById("helper2").value = temp
     // document.getElementById("helper1").value = burned.hash
 };
-
-const test = async (t) => {
-    fetch("http://localhost:8000/postTest", {
-        method: "POST",
-        body: JSON.stringify({
-            testValue: "halloooo"
-        }),
-        headers: {
-            "Content-type": "application/json; charset=UTF-8"
-        }
-    })
-    .then((res) => res.json())
-}
 
 const getBalance = async (t) => {
     // t.preventDefault();    
@@ -179,124 +158,38 @@ const getBalance = async (t) => {
       document.getElementById("helper2").value = (await provider.getNetwork()).chainId
     };
     
-    const burnTokens = async (t) => {
-        // t.preventDefault();
-        executed = false;
-        const burnResult = await transferContractSrc.burn(recipientAddress, protocol2Address2Src, tokenAmount, 0)
-        await burnResult.wait();
-        setBurned(burnResult);
-        const balance111 = await transferContractSrc.balanceOf(acc)
-        const balance211 = await transferContractDest.balanceOf(acc)
-        const balance221 = await transferContractDest.balanceOf(recipientAddress)
-        document.getElementById("helper").value = balance111
-        document.getElementById("helper1").value = balance211
-        document.getElementById("helper2").value = burnResult.hash
-        await verifierContract.startOracle(burnResult.hash)
-    };
-    
-    verifierContract.on("OraclePositive", async (currentHash)=>{
-        try{
-        document.getElementById("helper2").value = "success";
-        claimTokens();
-    } catch(e){}
-})
-    
-    const claimTokens = async (t) => {
-        // t.preventDefault();
-        try{
-        let burnReceipt = await web3.eth.getTransactionReceipt(await burned.hash)
-        while(burnReceipt == null && executed == false){
-            executed = true;
-            burnReceipt = await web3.eth.getTransactionReceipt(burned.hash)
-        }
-        document.getElementById("helper2").value = "executed worked";
-        const block             = await web3.eth.getBlock(burnReceipt.blockNumber);
-        const tx                = await provider.getTransaction(burned.hash);
-        const txReceipt         = await web3.eth.getTransactionReceipt(burned.hash);
-        const rlpHeader         = createRLPHeader(block);
-        tx.value = (ethers.BigNumber.from(tx.value)).toString();
-        tx.gasPrice = (ethers.BigNumber.from(tx.gasPrice)).toString();
-        const rlpEncodedTx      = createRLPTransaction(tx);
-        const rlpEncodedReceipt = createRLPReceipt(txReceipt);
-        
-        const path = encodeToBuffer(tx.transactionIndex);
-        const rlpEncodedTxNodes = await createTxMerkleProof(block, tx.transactionIndex);
-        const rlpEncodedReceiptNodes = await createReceiptMerkleProof(block, tx.transactionIndex);
-        
-        document.getElementById("helper").value = "before claim"
-        const claimResult = await transferContractDest.claim(rlpHeader, rlpEncodedTx, rlpEncodedReceipt, rlpEncodedTxNodes, rlpEncodedReceiptNodes, path, burned.hash);
-        await claimResult.wait();
-        document.getElementById("helper").value = "after claim"
-        const balance112 = await transferContractSrc.balanceOf(acc)
-        const balance212 = await transferContractDest.balanceOf(acc)
-        const balance222 = await transferContractDest.balanceOf(recipientAddress)
-        document.getElementById("helper").value = balance112
-        document.getElementById("helper1").value = balance212
-        document.getElementById("helper2").value = balance222
-        } catch(e){}
-    };
-    
-    const createTxMerkleProof = async (block, transactionIndex) => {
-        const trie = newTrie();
-        
-        for (let i=0; i<block.transactions.length; i++) {
-            const tx = await provider.getTransaction(block.transactions[i]);
-            tx.value = (ethers.BigNumber.from(tx.value)).toString();
-            tx.gasPrice = (ethers.BigNumber.from(tx.gasPrice)).toString();
-            const rlpTx = createRLPTransaction(tx);
-            const key = RLP.encode(i);
-        await asyncTriePut(trie, key, rlpTx);
-    }
-    
-    const key = RLP.encode(transactionIndex);
-    return encodeToBuffer(await Trie.createProof(trie, key));
-   };
-   
-   const createReceiptMerkleProof = async (block, transactionIndex) => {
-       const trie = newTrie();
-       
-       for (let i=0; i<block.transactions.length; i++) {
-           const receipt = await web3.eth.getTransactionReceipt(block.transactions[i]);
-           const rlpReceipt = createRLPReceipt(receipt);
-           const key = RLP.encode(i);
-           await asyncTriePut(trie, key, rlpReceipt);
-        }
-        
-        const key = RLP.encode(transactionIndex);
-        return encodeToBuffer(await Trie.createProof(trie, key));
-    }
-    
-    
     const setDestAddr = async (t) => {
         document.getElementById("destAddr").value = acc
         setRecipientAddress(acc)
     };
-
+    
     const signBurn = async (t) => {
-        // t.preventDefault();
-        let data = abiCoder.encode(['address', 'address', 'uint', 'uint'], [recipientAddress, protocol2Address2Src, tokenAmount, 0]);
-        data = data.slice(2,data.length);
         const nonce = await metaFContract.getNonce(acc);
+        document.getElementById("helper2").value = nonce
         const function_hex = web3.eth.abi.encodeFunctionSignature('burn(address,address,uint,uint)')
         const Req = {
         from: acc,
-        to: protocol2Address2Src,
+        to: protocol2Address1Src,
         value: 0,
         gas: 100000,
         nonce: nonce,
-        data: function_hex + data
+        fun: function_hex,
+        recAddress: recipientAddress,
+        targetContract: protocol2Address2Src,
+        amount: tokenAmount,
+        stake: 0
         }
     
         let message = ethers.utils.solidityKeccak256(
-            ['address', 'address', 'uint256', 'uint256', 'uint256', 'bytes'],
-            [Req.from, Req.to, Req.value, Req.gas, Req.nonce, Req.data] 
+            ['address', 'address', 'uint256', 'uint256', 'uint256', 'bytes', 'address', 'address', 'uint', 'uint'],
+            [Req.from, Req.to, Req.value, Req.gas, Req.nonce, Req.fun, Req.recAddress, Req.targetContract, Req.amount, Req.stake] 
         );
     
         prov = new ethers.providers.Web3Provider(window.ethereum);
         let signer = prov.getSigner();
         const arrayifyMessage = await ethers.utils.arrayify(message)
         const flatSignature = await signer.signMessage(arrayifyMessage)
-    
+
         fetch("http://localhost:8000/postBurn", {
             method: "POST",
             body: JSON.stringify({
@@ -308,6 +201,7 @@ const getBalance = async (t) => {
             }
         })
           .then((res) => res.json())
+          .then((req) => document.getElementById("helper1").value = req.message)
     }
 
     return (
