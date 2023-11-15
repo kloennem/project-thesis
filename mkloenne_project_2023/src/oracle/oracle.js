@@ -319,12 +319,12 @@ const web3BNBTestnet = new Web3(new Web3.providers.HttpProvider('https://data-se
 const providerBNBTestnet = new ethers.providers.WebSocketProvider("wss://go.getblock.io/8e10fd3fdea94028b9601386ef306bda");
 const signerBNBTestnet = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", providerBNBTestnet)
 
-const verifierAddressGoerli = "0x6fa64A3fBeD62945F17301f1330a769262f236e5"
+const oracleAddressGoerli = "0x6fa64A3fBeD62945F17301f1330a769262f236e5"
 
-const verifierAddressBNBTestnet = "0x266642C5F0c69c494437B0E5400E2BEe732A3301"
+const oracleAddressBNBTestnet = "0x9dCa11eF2C1F6E958e2B0bfcACe319a55a7C6D40"
 
-const verifierContractGoerli = new ethers.Contract(verifierAddressGoerli, OracleTxInclusionVerifier, signer);
-const verifierContractBNBTestnet = new ethers.Contract(verifierAddressBNBTestnet, OracleTxInclusionVerifier, signerBNBTestnet);
+const oracleContractGoerli = new ethers.Contract(oracleAddressGoerli, OracleTxInclusionVerifier, signer);
+const oracleContractBNBTestnet = new ethers.Contract(oracleAddressBNBTestnet, OracleTxInclusionVerifier, signerBNBTestnet);
 
 let blockConfirmed = false;
 let transactionVerified = false;
@@ -334,21 +334,21 @@ start();
 
 async function start() {
     console.log("Start")
-    verifierContractGoerli.on("StartOracle", async (blockHash) => {
+    oracleContractGoerli.on("StartOracle", async (blockHash) => {
         console.log(JSON.stringify(blockHash, null, 4))
         await question1();
         await question2();
         await question3();
-        await verifierContractGoerli.fromOracle(transactionVerified, receiptVerified, blockConfirmed, blockHash);
+        await oracleContractGoerli.fromOracle(transactionVerified, receiptVerified, blockConfirmed, blockHash);
         console.log("Response sent (Görli)");
     })
 
-    verifierContractBNBTestnet.on("StartOracle", async (blockHash) => {
+    oracleContractBNBTestnet.on("StartOracle", async (blockHash) => {
         console.log(JSON.stringify(blockHash, null, 4))
         await question1();
         await question2();
         await question3();
-        await verifierContractBNBTestnet.fromOracle(transactionVerified, receiptVerified, blockConfirmed, blockHash);
+        await oracleContractBNBTestnet.fromOracle(transactionVerified, receiptVerified, blockConfirmed, blockHash);
         console.log("Response sent (BNBTestnet)");
     })
 }

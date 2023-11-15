@@ -19,8 +19,8 @@ const protocol2AddressSrcGoerli = "0x1c6dFBa8F90d3258328D223FCFa2FB42DC05Fb42"
 const protocol2AddressDestGoerli = "0x21d367a7618bE5883916c3030094236B9Ce48405"
 
 // for BNB Testnet
-const protocol2Address1BNBTestnet = "0x6c657149Eaa9953dBFc44Aa02b8313178B847ce9"
-const protocol2Address2BNBTestnet = "0x73278Fea53Aeb67F9Af194aF53c1159F419a7ccF"
+const protocol2AddressSrcBNBTestnet = "0xAA9a07C385A284e3555763789D3f4055DF18b350"
+const protocol2AddressDestBNBTestnet = "0xDA7BfCbb2749C7F47b7dc3307343a0A705A1DF0c"
 
 let protocol2AddressSrc = protocol2AddressSrcGoerli;
 let protocol2AddressDest = protocol2AddressDestGoerli;
@@ -63,8 +63,8 @@ function App() {
             setCurrentNetwork("Görli");
         }
         else if (temp === 97) {
-            protocol2AddressSrc = protocol2Address1BNBTestnet;
-            protocol2AddressDest = protocol2Address2BNBTestnet; // todo: change to Goerli + init
+            protocol2AddressSrc = protocol2AddressSrcBNBTestnet;
+            protocol2AddressDest = protocol2AddressDestBNBTestnet; // todo: change to Goerli + init
             web3 = web3BNBTestnet;
             setCurrentNetwork("BNB Testnet");
         }
@@ -75,14 +75,14 @@ function App() {
     }
 
     transferContractDest.on("Claim", async (burnContract, sender, burnTime) => {
-        try {
+        // try {
             const balance110 = await transferContractSrc.balanceOf(acc)
             const balance210 = await transferContractDest.balanceOf(acc)
             const balance220 = await transferContractDest.balanceOf(recipientAddress)
             document.getElementById("helper").value = balance110
             document.getElementById("helper1").value = balance210
             document.getElementById("helper2").value = balance220
-        } catch { }
+        // } catch { }
     })
 
     const callSetAcc = async (t) => {
@@ -131,7 +131,7 @@ function App() {
             to: protocol2AddressSrc,
             value: 0,
             gas: 100000,
-            nonce: 0,
+            chain: (await prov.getNetwork()).chainId,
             fun: function_hex,
             recAddress: recipientAddress,
             targetContract: protocol2AddressDest,
@@ -141,7 +141,7 @@ function App() {
 
         let message = ethers.utils.solidityKeccak256(
             ['address', 'address', 'uint256', 'uint256', 'uint256', 'bytes', 'address', 'address', 'uint', 'uint'],
-            [Req.from, Req.to, Req.value, Req.gas, Req.nonce, Req.fun, Req.recAddress, Req.targetContract, Req.amount, Req.stake]
+            [Req.from, Req.to, Req.value, Req.gas, Req.chain, Req.fun, Req.recAddress, Req.targetContract, Req.amount, Req.stake]
         );
 
         prov = new ethers.providers.Web3Provider(window.ethereum);

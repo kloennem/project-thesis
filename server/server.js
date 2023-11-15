@@ -810,18 +810,35 @@ const OracleTxInclusionVerifier = [
 
 let burnResult;
 let executed;
+let transferContractSrc;
+let transferContractDest;
+let web3;
+let provider;
 
-const web3 = new Web3(new Web3.providers.HttpProvider('https://goerli.infura.io/v3/2e342128028646b9b9ea1ef796849e23'));
-const provider = new ethers.providers.Web3Provider(web3.currentProvider);
-const signer = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", provider)
+const web3Goerli = new Web3(new Web3.providers.HttpProvider('https://goerli.infura.io/v3/2e342128028646b9b9ea1ef796849e23'));
+const providerGoerli = new ethers.providers.Web3Provider(web3Goerli.currentProvider);
+const signerGoerli = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", providerGoerli)
+
+const web3BNBTestnet = new Web3(new Web3.providers.HttpProvider('https://data-seed-prebsc-1-s1.binance.org:8545'))
+const providerBNBTestnet = new ethers.providers.WebSocketProvider("wss://go.getblock.io/8e10fd3fdea94028b9601386ef306bda");
+const signerBNBTestnet = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", providerBNBTestnet)
 
 const protocol2AddressSrcGoerli = "0x1c6dFBa8F90d3258328D223FCFa2FB42DC05Fb42"
 const protocol2AddressDestGoerli = "0x21d367a7618bE5883916c3030094236B9Ce48405"
-const verifierAddressGoerli = "0x6fa64A3fBeD62945F17301f1330a769262f236e5"
+const oracleAddressGoerli = "0x6fa64A3fBeD62945F17301f1330a769262f236e5"
 
-const transferContractSrc = new ethers.Contract(protocol2AddressSrcGoerli, Protocol2, signer);
-const transferContractDest = new ethers.Contract(protocol2AddressDestGoerli, Protocol2, signer);
-const verifierContract = new ethers.Contract(verifierAddressGoerli, OracleTxInclusionVerifier, signer);
+const protocol2AddressSrcBNBTestnet = "0xAA9a07C385A284e3555763789D3f4055DF18b350"
+const protocol2AddressDestBNBTestnet = "0xDA7BfCbb2749C7F47b7dc3307343a0A705A1DF0c"
+const oracleAddressBNBTestnet = "0x9dCa11eF2C1F6E958e2B0bfcACe319a55a7C6D40"
+
+const transferContractSrcGoerli = new ethers.Contract(protocol2AddressSrcGoerli, Protocol2, signerGoerli);
+const transferContractDestGoerli = new ethers.Contract(protocol2AddressDestGoerli, Protocol2, signerGoerli);
+const oracleContractGoerli = new ethers.Contract(oracleAddressGoerli, OracleTxInclusionVerifier, signerGoerli);
+
+const transferContractSrcBNBTestnet = new ethers.Contract(protocol2AddressSrcBNBTestnet, Protocol2, signerBNBTestnet);
+const transferContractDestBNBTestnet = new ethers.Contract(protocol2AddressDestBNBTestnet, Protocol2, signerBNBTestnet);
+const oracleContractBNBTestnet = new ethers.Contract(oracleAddressBNBTestnet, OracleTxInclusionVerifier, signerBNBTestnet);
+
 
 app.use(cors());
 app.use(express.json());
@@ -840,38 +857,65 @@ app.post('/postBurn', (req, res) => {
 
 const burnTokens = async (reqStruct, signature) => {
     executed = false;
-    const message = ethers.utils.arrayify(ethers.utils.solidityKeccak256(['address', 'address', 'uint256', 'uint256', 'uint256', 'bytes', 'address', 'address', 'uint', 'uint'], [reqStruct.from, reqStruct.to, reqStruct.value, reqStruct.gas, reqStruct.nonce, reqStruct.fun, reqStruct.recAddress, reqStruct.targetContract, reqStruct.amount, reqStruct.stake]))
+    const message = ethers.utils.arrayify(ethers.utils.solidityKeccak256(['address', 'address', 'uint256', 'uint256', 'uint256', 'bytes', 'address', 'address', 'uint', 'uint'], [reqStruct.from, reqStruct.to, reqStruct.value, reqStruct.gas, reqStruct.chain, reqStruct.fun, reqStruct.recAddress, reqStruct.targetContract, reqStruct.amount, reqStruct.stake]))
     const messageVerified = await ethers.utils.verifyMessage(message, signature)
     if (messageVerified.toLowerCase() == reqStruct.from) {
         console.log("signature verification successful")
+        if(reqStruct.chain == 5){
+            transferContractSrc = transferContractSrcGoerli;
+        }
+        else if(reqStruct.chain == 97){
+            transferContractSrc = transferContractSrcBNBTestnet;
+        }
         burnResult = await transferContractSrc.burn(reqStruct.recAddress, reqStruct.targetContract, reqStruct.amount, reqStruct.stake, reqStruct.from, { gasLimit: 5000000 });
         await burnResult.wait();
-        console.log("forwarded burn hash " + burnResult.hash);
+        console.log(reqStruct.chain + ": forwarded burn hash " + burnResult.hash);
     }
     else {
         console.log("signature verification not successful")
     }
 };
 
-transferContractSrc.on("Burn", async (from, to, contract, value) => {
-    console.log("burn event caught");
-    await verifierContract.startOracle(burnResult.hash)
+transferContractSrcGoerli.on("Burn", async (from, to, contract, value) => {
+    console.log("burn event caught (Görli)");
+    await oracleContractGoerli.startOracle(burnResult.hash)
 });
 
-verifierContract.on("OraclePositive", async (currentHash) => {
-    console.log("oraclePositive event caught")
-    claimTokens();
+transferContractSrcBNBTestnet.on("Burn", async (from, to, contract, value) => {
+    console.log("burn event caught (BNBTestnet)");
+    await oracleContractBNBTestnet.startOracle(burnResult.hash)
 });
 
-const claimTokens = async (t) => {
+oracleContractGoerli.on("OraclePositive", async (currentHash) => {
+    console.log("oraclePositive event caught (Görli)")
+    claimTokens(5);
+});
+
+oracleContractBNBTestnet.on("OraclePositive", async (currentHash) => {
+    console.log("oraclePositive event caught (BNBTestnet)")
+    claimTokens(97);
+});
+
+const claimTokens = async (chainID) => {
+    if(chainID == 5){
+        transferContractDest = transferContractDestGoerli;
+        web3 = web3Goerli;
+        provider = providerGoerli;
+    }
+    else if(chainID == 97){
+        transferContractDest = transferContractDestBNBTestnet;
+        web3 = web3BNBTestnet;
+        provider = providerBNBTestnet;
+    }
+
     let burnReceipt = await web3.eth.getTransactionReceipt(burnResult.hash)
     while (burnReceipt === null && executed === false) {
         executed = true;
         burnReceipt = await web3.eth.getTransactionReceipt(burnResult.hash)
     }
-    console.log("executed worked")
+    executed = true;
     const block = await web3.eth.getBlock(burnReceipt.blockNumber);
-    const tx = await web3.eth.getTransaction(burnResult.hash);
+    const tx = await provider.getTransaction(burnResult.hash);
     const txReceipt = await web3.eth.getTransactionReceipt(burnResult.hash);
     const rlpHeader = createRLPHeader(block);
     tx.value = (ethers.BigNumber.from(tx.value)).toString();
