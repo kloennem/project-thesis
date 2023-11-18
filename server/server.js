@@ -18,795 +18,818 @@ const app = express();
 
 const Protocol2 = [
     {
-        "inputs": [
-            {
-                "internalType": "address[]",
-                "name": "tokenContracts",
-                "type": "address[]"
-            },
-            {
-                "internalType": "address",
-                "name": "txInclVerifier",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "initialSupply",
-                "type": "uint256"
-            },
-            {
-                "internalType": "address",
-                "name": "_masterAddress",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "constructor"
+      "inputs": [
+        {
+          "internalType": "address[]",
+          "name": "tokenContracts",
+          "type": "address[]"
+        },
+        {
+          "internalType": "address",
+          "name": "txInclVerifier",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "initialSupply",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_masterAddress",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
     },
     {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "spender",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "value",
-                "type": "uint256"
-            }
-        ],
-        "name": "Approval",
-        "type": "event"
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "spender",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "Approval",
+      "type": "event"
     },
     {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "sender",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "recipient",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "claimContract",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "value",
-                "type": "uint256"
-            }
-        ],
-        "name": "Burn",
-        "type": "event"
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "claimContract",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "Burn",
+      "type": "event"
     },
     {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "burnContract",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "sender",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "uint256",
-                "name": "burnTime",
-                "type": "uint256"
-            }
-        ],
-        "name": "Claim",
-        "type": "event"
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "burnContract",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "burnTime",
+          "type": "uint256"
+        }
+      ],
+      "name": "Claim",
+      "type": "event"
     },
     {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "from",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "to",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "value",
-                "type": "uint256"
-            }
-        ],
-        "name": "Transfer",
-        "type": "event"
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        }
+      ],
+      "name": "Transfer",
+      "type": "event"
     },
     {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "spender",
-                "type": "address"
-            }
-        ],
-        "name": "allowance",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "spender",
+          "type": "address"
+        }
+      ],
+      "name": "allowance",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
     },
     {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "spender",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            }
-        ],
-        "name": "approve",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "spender",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "approve",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "account",
-                "type": "address"
-            }
-        ],
-        "name": "balanceOf",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "balanceOf",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
     },
     {
-        "inputs": [],
-        "name": "decimals",
-        "outputs": [
-            {
-                "internalType": "uint8",
-                "name": "",
-                "type": "uint8"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
+      "inputs": [],
+      "name": "decimals",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
     },
     {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "spender",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "subtractedValue",
-                "type": "uint256"
-            }
-        ],
-        "name": "decreaseAllowance",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "spender",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "subtractedValue",
+          "type": "uint256"
+        }
+      ],
+      "name": "decreaseAllowance",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "spender",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "addedValue",
-                "type": "uint256"
-            }
-        ],
-        "name": "increaseAllowance",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "spender",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "addedValue",
+          "type": "uint256"
+        }
+      ],
+      "name": "increaseAllowance",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
-        "inputs": [],
-        "name": "name",
-        "outputs": [
-            {
-                "internalType": "string",
-                "name": "",
-                "type": "string"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
+      "inputs": [],
+      "name": "name",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
     },
     {
-        "inputs": [],
-        "name": "symbol",
-        "outputs": [
-            {
-                "internalType": "string",
-                "name": "",
-                "type": "string"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
+      "inputs": [],
+      "name": "symbol",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
     },
     {
-        "inputs": [],
-        "name": "totalSupply",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
+      "inputs": [],
+      "name": "totalSupply",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
     },
     {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "to",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            }
-        ],
-        "name": "transfer",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "transfer",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "from",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "to",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            }
-        ],
-        "name": "transferFrom",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "function"
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "from",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "transferFrom",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "tokenContract",
-                "type": "address"
-            }
-        ],
-        "name": "registerTokenContract",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "tokenContract",
+          "type": "address"
+        }
+      ],
+      "name": "registerTokenContract",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "recipient",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "claimContract",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "value",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "stake",
-                "type": "uint256"
-            },
-            {
-                "internalType": "address",
-                "name": "sender",
-                "type": "address"
-            }
-        ],
-        "name": "burn",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "recipient",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "claimContract",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "stake",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        }
+      ],
+      "name": "burn",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
-        "inputs": [
-            {
-                "internalType": "bytes",
-                "name": "rlpHeader",
-                "type": "bytes"
-            },
-            {
-                "internalType": "bytes",
-                "name": "serializedTx",
-                "type": "bytes"
-            },
-            {
-                "internalType": "bytes",
-                "name": "serializedReceipt",
-                "type": "bytes"
-            },
-            {
-                "internalType": "bytes",
-                "name": "rlpMerkleProofTx",
-                "type": "bytes"
-            },
-            {
-                "internalType": "bytes",
-                "name": "rlpMerkleProofReceipt",
-                "type": "bytes"
-            },
-            {
-                "internalType": "bytes",
-                "name": "path",
-                "type": "bytes"
-            },
-            {
-                "internalType": "bytes32",
-                "name": "txHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "claim",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "rlpHeader",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "serializedTx",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "serializedReceipt",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "rlpMerkleProofTx",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "rlpMerkleProofReceipt",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "path",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "txHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "claim",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
-        "inputs": [
-            {
-                "internalType": "bytes",
-                "name": "rlpHeader",
-                "type": "bytes"
-            },
-            {
-                "internalType": "bytes",
-                "name": "serializedTx",
-                "type": "bytes"
-            },
-            {
-                "internalType": "bytes",
-                "name": "serializedReceipt",
-                "type": "bytes"
-            },
-            {
-                "internalType": "bytes",
-                "name": "rlpMerkleProofTx",
-                "type": "bytes"
-            },
-            {
-                "internalType": "bytes",
-                "name": "rlpMerkleProofReceipt",
-                "type": "bytes"
-            },
-            {
-                "internalType": "bytes",
-                "name": "path",
-                "type": "bytes"
-            },
-            {
-                "internalType": "bytes32",
-                "name": "txHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "confirm",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
+      "inputs": [
+        {
+          "internalType": "bytes",
+          "name": "rlpHeader",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "serializedTx",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "serializedReceipt",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "rlpMerkleProofTx",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "rlpMerkleProofReceipt",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "path",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "txHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "confirm",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     }
-]
+  ]
 const OracleTxInclusionVerifier = [
     {
-        "inputs": [
-            {
-                "internalType": "address[10]",
-                "name": "_oracles",
-                "type": "address[10]"
-            }
-        ],
-        "stateMutability": "nonpayable",
-        "type": "constructor"
+      "inputs": [
+        {
+          "internalType": "address[10]",
+          "name": "_oracles",
+          "type": "address[10]"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
     },
     {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "bytes32",
-                "name": "burnBlockHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "OraclePositive",
-        "type": "event"
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "burnBlockHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "OraclePositive",
+      "type": "event"
     },
     {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "bytes32",
-                "name": "burnBlockHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "StartFailed",
-        "type": "event"
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "burnBlockHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "StartFailed",
+      "type": "event"
     },
     {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "bytes32",
-                "name": "burnBlockHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "StartOracle",
-        "type": "event"
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "burnBlockHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "chainID",
+          "type": "uint256"
+        }
+      ],
+      "name": "StartOracle",
+      "type": "event"
     },
     {
-        "inputs": [
-            {
-                "internalType": "bytes32",
-                "name": "_currentBurnBlockHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "startOracle",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "_currentBurnBlockHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_chainID",
+          "type": "uint256"
+        }
+      ],
+      "name": "startOracle",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
-        "inputs": [
-            {
-                "internalType": "bool",
-                "name": "_verifyTxResult",
-                "type": "bool"
-            },
-            {
-                "internalType": "bool",
-                "name": "_verifyReceiptResult",
-                "type": "bool"
-            },
-            {
-                "internalType": "bool",
-                "name": "_blockConfirmationResult",
-                "type": "bool"
-            },
-            {
-                "internalType": "bytes32",
-                "name": "_currentBurnBlockHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "fromOracle",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
+      "inputs": [
+        {
+          "internalType": "bool",
+          "name": "_verifyTxResult",
+          "type": "bool"
+        },
+        {
+          "internalType": "bool",
+          "name": "_verifyReceiptResult",
+          "type": "bool"
+        },
+        {
+          "internalType": "bool",
+          "name": "_blockConfirmationResult",
+          "type": "bool"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_currentBurnBlockHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "fromOracle",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
     },
     {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            },
-            {
-                "internalType": "bytes",
-                "name": "",
-                "type": "bytes"
-            },
-            {
-                "internalType": "uint8",
-                "name": "",
-                "type": "uint8"
-            },
-            {
-                "internalType": "bytes",
-                "name": "",
-                "type": "bytes"
-            },
-            {
-                "internalType": "bytes",
-                "name": "",
-                "type": "bytes"
-            },
-            {
-                "internalType": "bytes",
-                "name": "",
-                "type": "bytes"
-            },
-            {
-                "internalType": "bytes32",
-                "name": "_currentBurnBlockHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "verifyTransaction",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "payable",
-        "type": "function"
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        },
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_currentBurnBlockHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "verifyTransaction",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function",
+      "payable": true
     },
     {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            },
-            {
-                "internalType": "bytes",
-                "name": "",
-                "type": "bytes"
-            },
-            {
-                "internalType": "uint8",
-                "name": "",
-                "type": "uint8"
-            },
-            {
-                "internalType": "bytes",
-                "name": "",
-                "type": "bytes"
-            },
-            {
-                "internalType": "bytes",
-                "name": "",
-                "type": "bytes"
-            },
-            {
-                "internalType": "bytes",
-                "name": "",
-                "type": "bytes"
-            },
-            {
-                "internalType": "bytes32",
-                "name": "_currentBurnBlockHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "verifyReceipt",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "payable",
-        "type": "function"
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        },
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_currentBurnBlockHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "verifyReceipt",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function",
+      "payable": true
     },
     {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            },
-            {
-                "internalType": "bytes32",
-                "name": "",
-                "type": "bytes32"
-            },
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            },
-            {
-                "internalType": "bytes32",
-                "name": "_currentBurnBlockHash",
-                "type": "bytes32"
-            }
-        ],
-        "name": "isBlockConfirmed",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "stateMutability": "payable",
-        "type": "function"
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "_currentBurnBlockHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "isBlockConfirmed",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function",
+      "payable": true
     },
     {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "",
-                "type": "uint256"
-            },
-            {
-                "internalType": "bytes",
-                "name": "",
-                "type": "bytes"
-            },
-            {
-                "internalType": "uint8",
-                "name": "",
-                "type": "uint8"
-            },
-            {
-                "internalType": "bytes",
-                "name": "",
-                "type": "bytes"
-            },
-            {
-                "internalType": "bytes",
-                "name": "",
-                "type": "bytes"
-            },
-            {
-                "internalType": "bytes",
-                "name": "",
-                "type": "bytes"
-            }
-        ],
-        "name": "verifyState",
-        "outputs": [
-            {
-                "internalType": "uint8",
-                "name": "",
-                "type": "uint8"
-            }
-        ],
-        "stateMutability": "payable",
-        "type": "function"
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
+        },
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        },
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
+        },
+        {
+          "internalType": "bytes",
+          "name": "",
+          "type": "bytes"
+        }
+      ],
+      "name": "verifyState",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "payable",
+      "type": "function",
+      "payable": true
     },
     {
-        "inputs": [],
-        "name": "getCurrentBurnBlockHashes",
-        "outputs": [
-            {
-                "internalType": "bytes32[20]",
-                "name": "",
-                "type": "bytes32[20]"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
+      "inputs": [],
+      "name": "getCurrentBurnBlockHashes",
+      "outputs": [
+        {
+          "internalType": "bytes32[20]",
+          "name": "",
+          "type": "bytes32[20]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
     },
     {
-        "inputs": [],
-        "name": "getCurrentCounter",
-        "outputs": [
-            {
-                "internalType": "uint256[20]",
-                "name": "_verifyTxResultCounter",
-                "type": "uint256[20]"
-            },
-            {
-                "internalType": "uint256[20]",
-                "name": "_verifyReceiptCounter",
-                "type": "uint256[20]"
-            },
-            {
-                "internalType": "uint256[20]",
-                "name": "_blockConfirmationResultCounter",
-                "type": "uint256[20]"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
+      "inputs": [],
+      "name": "getCurrentCounter",
+      "outputs": [
+        {
+          "internalType": "uint256[20]",
+          "name": "_verifyTxResultCounter",
+          "type": "uint256[20]"
+        },
+        {
+          "internalType": "uint256[20]",
+          "name": "_verifyReceiptCounter",
+          "type": "uint256[20]"
+        },
+        {
+          "internalType": "uint256[20]",
+          "name": "_blockConfirmationResultCounter",
+          "type": "uint256[20]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
     }
-]
+  ]
 
 let burnResult;
 let executed;
@@ -823,13 +846,13 @@ const web3BNBTestnet = new Web3(new Web3.providers.HttpProvider('https://data-se
 const providerBNBTestnet = new ethers.providers.WebSocketProvider("wss://go.getblock.io/8e10fd3fdea94028b9601386ef306bda");
 const signerBNBTestnet = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", providerBNBTestnet)
 
-const protocol2AddressSrcGoerli = "0x1c6dFBa8F90d3258328D223FCFa2FB42DC05Fb42"
-const protocol2AddressDestGoerli = "0x21d367a7618bE5883916c3030094236B9Ce48405"
-const oracleAddressGoerli = "0x6fa64A3fBeD62945F17301f1330a769262f236e5"
+const protocol2AddressSrcGoerli = "0xe996bd5E663a711CB4eFB0a30AF4D18A7DE45143"
+const protocol2AddressDestGoerli = "0xF715401a3240C75e219c05d9940Dea7bdb61Fb38"
+const oracleAddressGoerli = "0xBb06ff78d76dC75e03B588D1a73f5e14E4Cc9074"
 
-const protocol2AddressSrcBNBTestnet = "0xAA9a07C385A284e3555763789D3f4055DF18b350"
-const protocol2AddressDestBNBTestnet = "0xDA7BfCbb2749C7F47b7dc3307343a0A705A1DF0c"
-const oracleAddressBNBTestnet = "0x9dCa11eF2C1F6E958e2B0bfcACe319a55a7C6D40"
+const protocol2AddressSrcBNBTestnet = "0xd21A7E1576AC660040b04B1699ed8c611c2Be72E"
+const protocol2AddressDestBNBTestnet = "0x620B4A8D7D13FA00fEc27607B59C217c6355A4bD"
+const oracleAddressBNBTestnet = "0x9c882Bb872C0A4b5f4dc0ED544A26BFb731192E8"
 
 const transferContractSrcGoerli = new ethers.Contract(protocol2AddressSrcGoerli, Protocol2, signerGoerli);
 const transferContractDestGoerli = new ethers.Contract(protocol2AddressDestGoerli, Protocol2, signerGoerli);
@@ -857,19 +880,25 @@ app.post('/postBurn', (req, res) => {
 
 const burnTokens = async (reqStruct, signature) => {
     executed = false;
-    const message = ethers.utils.arrayify(ethers.utils.solidityKeccak256(['address', 'address', 'uint256', 'uint256', 'uint256', 'bytes', 'address', 'address', 'uint', 'uint'], [reqStruct.from, reqStruct.to, reqStruct.value, reqStruct.gas, reqStruct.chain, reqStruct.fun, reqStruct.recAddress, reqStruct.targetContract, reqStruct.amount, reqStruct.stake]))
+    const message = ethers.utils.arrayify(ethers.utils.solidityKeccak256(['address', 'address', 'uint256', 'uint256', 'uint256', 'bytes', 'address', 'address', 'uint', 'uint'], [reqStruct.from, reqStruct.to, reqStruct.value, reqStruct.gas, reqStruct.srcChain, reqStruct.fun, reqStruct.recAddress, reqStruct.targetContract, reqStruct.amount, reqStruct.stake]))
     const messageVerified = await ethers.utils.verifyMessage(message, signature)
     if (messageVerified.toLowerCase() == reqStruct.from) {
         console.log("signature verification successful")
-        if(reqStruct.chain == 5){
+        if(reqStruct.srcChain == 5){
+            console.log("burn chain: Görli")
             transferContractSrc = transferContractSrcGoerli;
         }
-        else if(reqStruct.chain == 97){
+        else if(reqStruct.srcChain == 97){
+            console.log("burn chain: BNB")
             transferContractSrc = transferContractSrcBNBTestnet;
         }
+        else{
+            console.log("burn: chainID wrong")
+        }
         burnResult = await transferContractSrc.burn(reqStruct.recAddress, reqStruct.targetContract, reqStruct.amount, reqStruct.stake, reqStruct.from, { gasLimit: 5000000 });
+        console.log("waiting for burn to finish")
         await burnResult.wait();
-        console.log(reqStruct.chain + ": forwarded burn hash " + burnResult.hash);
+        console.log(reqStruct.srcChain + ": forwarded burn hash " + burnResult.hash);
     }
     else {
         console.log("signature verification not successful")
@@ -878,12 +907,32 @@ const burnTokens = async (reqStruct, signature) => {
 
 transferContractSrcGoerli.on("Burn", async (from, to, contract, value) => {
     console.log("burn event caught (Görli)");
-    await oracleContractGoerli.startOracle(burnResult.hash)
+    if(contract == protocol2AddressDestGoerli){
+        console.log("start oracle on Görli")
+        await oracleContractGoerli.startOracle(burnResult.hash, 5);
+    }
+    else if(contract == protocol2AddressDestBNBTestnet){
+        console.log("start oracle on BNB")
+        await oracleContractBNBTestnet.startOracle(burnResult.hash, 5);
+    }
+    else{
+        console.log("burn: contract wrong")
+    }
 });
 
 transferContractSrcBNBTestnet.on("Burn", async (from, to, contract, value) => {
     console.log("burn event caught (BNBTestnet)");
-    await oracleContractBNBTestnet.startOracle(burnResult.hash)
+    if(contract == protocol2AddressDestGoerli){
+        console.log("start oracle on Görli")
+        await oracleContractGoerli.startOracle(burnResult.hash, 97);
+    }
+    else if(contract == protocol2AddressDestBNBTestnet){
+        console.log("start oracle on BNB")
+        await oracleContractBNBTestnet.startOracle(burnResult.hash, 97);
+    }
+    else{
+        console.log("burn: contract wrong")
+    }
 });
 
 oracleContractGoerli.on("OraclePositive", async (currentHash) => {
@@ -906,6 +955,9 @@ const claimTokens = async (chainID) => {
         transferContractDest = transferContractDestBNBTestnet;
         web3 = web3BNBTestnet;
         provider = providerBNBTestnet;
+    }
+    else{
+        console.log("claim: chainID wrong")
     }
 
     let burnReceipt = await web3.eth.getTransactionReceipt(burnResult.hash)

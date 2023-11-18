@@ -22,12 +22,12 @@ contract OracleTxInclusionVerifier{
         oracles = _oracles;
     }
 
-    function startOracle(bytes32 _currentBurnBlockHash) public {
+    function startOracle(bytes32 _currentBurnBlockHash, uint _chainID) public {
         for(uint i=0; i<20; i++){
             if(currentBurnBlockHash[i] == 0){
                 currentBurnBlockHash[i] = _currentBurnBlockHash;
                 blockHashIndex[_currentBurnBlockHash] = i;
-                emit StartOracle(_currentBurnBlockHash);
+                emit StartOracle(_currentBurnBlockHash, _chainID);
                 return;
             }
         }
@@ -97,7 +97,7 @@ contract OracleTxInclusionVerifier{
         return (verifyTxResultCounter, verifyReceiptCounter, blockConfirmationResultCounter);
     }
 
-    event StartOracle(bytes32 indexed burnBlockHash);
+    event StartOracle(bytes32 indexed burnBlockHash, uint chainID);
     event OraclePositive(bytes32 indexed burnBlockHash);
     event StartFailed(bytes32 indexed burnBlockHash);
 }

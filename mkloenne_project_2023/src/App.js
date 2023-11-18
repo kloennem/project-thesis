@@ -15,12 +15,12 @@ const web3BNBTestnet = new Web3(new Web3.providers.HttpProvider('https://data-se
 
 // Contract addresses of the deployed smart contract
 // for Görli
-const protocol2AddressSrcGoerli = "0x1c6dFBa8F90d3258328D223FCFa2FB42DC05Fb42"
-const protocol2AddressDestGoerli = "0x21d367a7618bE5883916c3030094236B9Ce48405"
+const protocol2AddressSrcGoerli = "0xe996bd5E663a711CB4eFB0a30AF4D18A7DE45143"
+const protocol2AddressDestGoerli = "0xF715401a3240C75e219c05d9940Dea7bdb61Fb38"
 
 // for BNB Testnet
-const protocol2AddressSrcBNBTestnet = "0xAA9a07C385A284e3555763789D3f4055DF18b350"
-const protocol2AddressDestBNBTestnet = "0xDA7BfCbb2749C7F47b7dc3307343a0A705A1DF0c"
+const protocol2AddressSrcBNBTestnet = "0xd21A7E1576AC660040b04B1699ed8c611c2Be72E"
+const protocol2AddressDestBNBTestnet = "0x620B4A8D7D13FA00fEc27607B59C217c6355A4bD"
 
 let protocol2AddressSrc = protocol2AddressSrcGoerli;
 let protocol2AddressDest = protocol2AddressDestGoerli;
@@ -74,15 +74,8 @@ function App() {
         transferContractDest = new ethers.Contract(protocol2AddressDest, Protocol2, prov.getSigner());
     }
 
-    transferContractDest.on("Claim", async (burnContract, sender, burnTime) => {
-        // try {
-            const balance110 = await transferContractSrc.balanceOf(acc)
-            const balance210 = await transferContractDest.balanceOf(acc)
-            const balance220 = await transferContractDest.balanceOf(recipientAddress)
-            document.getElementById("helper").value = balance110
-            document.getElementById("helper1").value = balance210
-            document.getElementById("helper2").value = balance220
-        // } catch { }
+    transferContractDest.on("Claim", async () => {
+            getBalance();
     })
 
     const callSetAcc = async (t) => {
@@ -93,10 +86,14 @@ function App() {
     };
 
     const init = async () => {
-        const tC1 = await transferContractSrc.registerTokenContract(protocol2AddressDest);
+        const tC1 = await transferContractSrc.registerTokenContract(protocol2AddressDestGoerli);
         await tC1.wait();
-        const tC2 = await transferContractDest.registerTokenContract(protocol2AddressSrc);
+        const tC1_2 = await transferContractSrc.registerTokenContract(protocol2AddressDestBNBTestnet);
+        await tC1_2.wait();
+        const tC2 = await transferContractDest.registerTokenContract(protocol2AddressSrcGoerli);
         await tC2.wait();
+        const tC2_2 = await transferContractDest.registerTokenContract(protocol2AddressSrcBNBTestnet);
+        await tC2_2.wait();
     };
 
     const startTransaction = async (t) => {
@@ -131,7 +128,7 @@ function App() {
             to: protocol2AddressSrc,
             value: 0,
             gas: 100000,
-            chain: (await prov.getNetwork()).chainId,
+            srcChain: (await prov.getNetwork()).chainId,
             fun: function_hex,
             recAddress: recipientAddress,
             targetContract: protocol2AddressDest,
@@ -141,7 +138,7 @@ function App() {
 
         let message = ethers.utils.solidityKeccak256(
             ['address', 'address', 'uint256', 'uint256', 'uint256', 'bytes', 'address', 'address', 'uint', 'uint'],
-            [Req.from, Req.to, Req.value, Req.gas, Req.chain, Req.fun, Req.recAddress, Req.targetContract, Req.amount, Req.stake]
+            [Req.from, Req.to, Req.value, Req.gas, Req.srcChain, Req.fun, Req.recAddress, Req.targetContract, Req.amount, Req.stake]
         );
 
         prov = new ethers.providers.Web3Provider(window.ethereum);
