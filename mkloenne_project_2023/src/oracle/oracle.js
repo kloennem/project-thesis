@@ -342,98 +342,130 @@ const oracleContractBNBTestnet = new ethers.Contract(oracleAddressBNBTestnet, Or
 let blockConfirmed = false;
 let transactionVerified = false;
 let receiptVerified = false;
+const map = new Map();
 
-start();
+console.log("Start")
+setInterval(async function(){
+    let eventFilterGoerli = oracleContractGoerli.filters.StartOracle()
+    let eventsGoerli = await oracleContractGoerli.queryFilter(eventFilterGoerli, -12, -2)
+    for(let i = 0; i < eventsGoerli.length; i++){
+        if(map.get(eventsGoerli[0].args.burnBlockHash) != true){
+            console.log("interval: start event caught (Görli)")
+            startOracleGoerli(eventsGoerli[0].args.burnBlockHash, eventsGoerli[0].args.chainID);
+        }
+    }
+    let eventFilterBNBTestnet = oracleContractBNBTestnet.filters.StartOracle()
+    let eventsBNBTestnet = await oracleContractBNBTestnet.queryFilter(eventFilterBNBTestnet, -12, -2)
+    for(let i = 0; i < eventsBNBTestnet.length; i++){
+        if(map.get(eventsBNBTestnet[0].args.burnBlockHash) != true){
+            console.log("interval: start event caught (Görli)")
+            startOracleBNBTestnet(eventsBNBTestnet[0].args.burnBlockHash, eventsBNBTestnet[0].args.chainID);
+        }
+    }
+}, 10000) // every 10 seconds
 
-async function start() {
-    console.log("Start")
-    oracleContractGoerli.on("StartOracle", async (blockHash, chainID) => {
-        console.log("start event caught (Görli)")
-        if(chainID == 5){
-            console.log("Oracle started on Görli")
-            console.log("burn transaction on Görli")
-            const burnReceipt = await web3.eth.getTransactionReceipt(blockHash)
-            const block = await web3.eth.getBlock(burnReceipt.blockNumber);
-            while(provider.getBlockNumber()-block.blockNumber < 12){}
-            console.log(block.transactions[burnReceipt.transactionIndex])
-            console.log(blockHash)
-            console.log(burnReceipt.status)
-            if(block.transactions[burnReceipt.transactionIndex] == blockHash && burnReceipt.status == true){
-                transactionVerified = true;
-                receiptVerified = true;
-                blockConfirmed = true;
-            }
-            else{
-                console.log("transaction not contained in block")
-                return;
-            }
-        }
-        else if(chainID == 97){
-            const burnReceipt = await web3BNBTestnet.eth.getTransactionReceipt(blockHash)
-            const block = await web3BNBTestnet.eth.getBlock(burnReceipt.blockNumber);
-            console.log("Oracle started on Görli")
-            console.log("burn transaction on BNBTestnet")
-            while(providerBNBTestnet.getBlockNumber()-block.blockNumber < 12){}
-            console.log(block.transactions[burnReceipt.transactionIndex])
-            console.log(blockHash)
-            console.log(burnReceipt.status)
-            if(block.transactions[burnReceipt.transactionIndex] == blockHash && burnReceipt.status == true){
-                transactionVerified = true;
-                receiptVerified = true;
-                blockConfirmed = true;
-            }
-            else{
-                console.log("transaction not contained in block")
-                return;
-            }
-        }
-        console.log(JSON.stringify(blockHash, null, 4))
-        await oracleContractGoerli.fromOracle(transactionVerified, receiptVerified, blockConfirmed, blockHash);
-        console.log("Response sent (Görli)");
-    })
+oracleContractGoerli.on("StartOracle", async (blockHash, chainID) => {
+    console.log("start event caught (Görli)")
+    startOracleGoerli(blockHash, chainID);
+})
 
-    oracleContractBNBTestnet.on("StartOracle", async (blockHash, chainID) => {
-        console.log("start event caught (BNB)")
-        if(chainID == 5){
-            console.log("Oracle started on BNBTestnet")
-            console.log("burn transaction on Görli")
-            const burnReceipt = await web3.eth.getTransactionReceipt(blockHash)
-            const block = await web3.eth.getBlock(burnReceipt.blockNumber);
-            while(provider.getBlockNumber()-block.blockNumber < 12){}
-            console.log(block.transactions[burnReceipt.transactionIndex])
-            console.log(blockHash)
-            console.log(burnReceipt.status)
-            if(block.transactions[burnReceipt.transactionIndex] == blockHash && burnReceipt.status == true){
-                transactionVerified = true;
-                receiptVerified = true;
-                blockConfirmed = true;
-            }
-            else{
-                console.log("transaction not contained in block")
-                return;
-            }
+oracleContractBNBTestnet.on("StartOracle", async (blockHash, chainID) => {
+    console.log("start event caught (BNB)")
+    startOracleBNBTestnet(blockHash, chainID);
+})
+
+async function startOracleGoerli(blockHash, chainID){
+    if(chainID == 5){
+        console.log("Oracle started on Görli")
+        console.log("burn transaction on Görli")
+        const burnReceipt = await web3.eth.getTransactionReceipt(blockHash)
+        const block = await web3.eth.getBlock(burnReceipt.blockNumber);
+        while(provider.getBlockNumber()-block.blockNumber < 12){}
+        console.log(block.transactions[burnReceipt.transactionIndex])
+        console.log(blockHash)
+        console.log(burnReceipt.status)
+        if(block.transactions[burnReceipt.transactionIndex] == blockHash && burnReceipt.status == true){
+            transactionVerified = true;
+            receiptVerified = true;
+            blockConfirmed = true;
         }
-        else if(chainID == 97){
-            console.log("Oracle started on BNBTestnet")
-            console.log("burn transaction on BNBTestnet")
-            const burnReceipt = await web3BNBTestnet.eth.getTransactionReceipt(blockHash)
-            const block = await web3BNBTestnet.eth.getBlock(burnReceipt.blockNumber);
-            while(provider.getBlockNumber()-block.blockNumber < 12){}
-            console.log(block.transactions[burnReceipt.transactionIndex])
-            console.log(blockHash)
-            console.log(burnReceipt.status)
-            if(block.transactions[burnReceipt.transactionIndex] == blockHash && burnReceipt.status == true){
-                transactionVerified = true;
-                receiptVerified = true;
-                blockConfirmed = true;
-            }
-            else{
-                console.log("transaction not contained in block")
-                return;
-            }
+        else{
+            console.log("transaction not contained in block")
+            return;
         }
-        console.log(JSON.stringify(blockHash, null, 4))
-        await oracleContractBNBTestnet.fromOracle(transactionVerified, receiptVerified, blockConfirmed, blockHash);
-        console.log("Response sent (BNBTestnet)");
-    })
+    }
+    else if(chainID == 97){
+        const burnReceipt = await web3BNBTestnet.eth.getTransactionReceipt(blockHash)
+        const block = await web3BNBTestnet.eth.getBlock(burnReceipt.blockNumber);
+        console.log("Oracle started on Görli")
+        console.log("burn transaction on BNBTestnet")
+        while(providerBNBTestnet.getBlockNumber()-block.blockNumber < 12){}
+        console.log(block.transactions[burnReceipt.transactionIndex])
+        console.log(blockHash)
+        console.log(burnReceipt.status)
+        if(block.transactions[burnReceipt.transactionIndex] == blockHash && burnReceipt.status == true){
+            transactionVerified = true;
+            receiptVerified = true;
+            blockConfirmed = true;
+        }
+        else{
+            console.log("transaction not contained in block")
+            return;
+        }
+    }
+    console.log(JSON.stringify(blockHash, null, 4))
+    if(map.get(blockHash) == true){
+        return;
+    }
+    map.set(blockHash, true);
+    await oracleContractGoerli.fromOracle(transactionVerified, receiptVerified, blockConfirmed, blockHash);
+    console.log("Response sent (Görli)");
+}
+
+async function startOracleBNBTestnet(blockHash, chainID){
+    if(chainID == 5){
+        console.log("Oracle started on BNBTestnet")
+        console.log("burn transaction on Görli")
+        const burnReceipt = await web3.eth.getTransactionReceipt(blockHash)
+        const block = await web3.eth.getBlock(burnReceipt.blockNumber);
+        while(provider.getBlockNumber()-block.blockNumber < 12){}
+        console.log(block.transactions[burnReceipt.transactionIndex])
+        console.log(blockHash)
+        console.log(burnReceipt.status)
+        if(block.transactions[burnReceipt.transactionIndex] == blockHash && burnReceipt.status == true){
+            transactionVerified = true;
+            receiptVerified = true;
+            blockConfirmed = true;
+        }
+        else{
+            console.log("transaction not contained in block")
+            return;
+        }
+    }
+    else if(chainID == 97){
+        console.log("Oracle started on BNBTestnet")
+        console.log("burn transaction on BNBTestnet")
+        const burnReceipt = await web3BNBTestnet.eth.getTransactionReceipt(blockHash)
+        const block = await web3BNBTestnet.eth.getBlock(burnReceipt.blockNumber);
+        while(provider.getBlockNumber()-block.blockNumber < 12){}
+        console.log(block.transactions[burnReceipt.transactionIndex])
+        console.log(blockHash)
+        console.log(burnReceipt.status)
+        if(block.transactions[burnReceipt.transactionIndex] == blockHash && burnReceipt.status == true){
+            transactionVerified = true;
+            receiptVerified = true;
+            blockConfirmed = true;
+        }
+        else{
+            console.log("transaction not contained in block")
+            return;
+        }
+    }
+    console.log(JSON.stringify(blockHash, null, 4))
+    if(map.get(blockHash) == true){
+        return;
+    }
+    map.set(blockHash, true);
+    await oracleContractBNBTestnet.fromOracle(transactionVerified, receiptVerified, blockConfirmed, blockHash);
+    console.log("Response sent (BNBTestnet)");
 }

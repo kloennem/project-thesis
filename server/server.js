@@ -949,6 +949,25 @@ oracleContractBNBTestnet.on("OraclePositive", async (currentHash) => {
     claimTokens(97);
 });
 
+setInterval(async function(){
+    let eventFilterGoerli = oracleContractGoerli.filters.OraclePositive()
+    let eventsGoerli = await oracleContractGoerli.queryFilter(eventFilterGoerli, -12, -2)
+    for(let i = 0; i < eventsGoerli.length; i++){
+        if(map.get(eventsGoerli[0].args.burnBlockHash) == 5 || map.get(eventsGoerli[0].args.burnBlockHash) == 97){
+            console.log("interval: OraclePositive event caught (Görli)");
+            claimTokens(5);
+        }
+    }
+    let eventFilterBNBTestnet = oracleContractBNBTestnet.filters.OraclePositive()
+    let eventsBNBTestnet = await oracleContractBNBTestnet.queryFilter(eventFilterBNBTestnet, -12, -2)
+    for(let i = 0; i < eventsBNBTestnet.length; i++){
+        if(map.get(eventsBNBTestnet[0].args.burnBlockHash) == 5 || map.get(eventsBNBTestnet[0].args.burnBlockHash) == 97){
+            console.log("interval: OraclePositive event caught (Görli)");
+            claimTokens(97);
+        }
+    }
+}, 10000) // every 10 seconds
+
 const claimTokens = async (chainID) => {
     if(chainID == 5){
         transferContractDest = transferContractDestGoerli;
@@ -959,17 +978,20 @@ const claimTokens = async (chainID) => {
     else{
         console.log("claim: chainID wrong")
     }
-    
+
     if(map.get(burnResult.hash) == 5){
         web3 = web3Goerli;
         provider = providerGoerli;
+        map.set(burnResult.hash, 0);
     }
     else if(map.get(burnResult.hash) == 97){
         web3 = web3BNBTestnet;
         provider = providerBNBTestnet;
+        map.set(burnResult.hash, 0);
     }
     else {
         console.log("source chain of hash not saved");
+        return;
     }
 
     let burnReceipt = await web3.eth.getTransactionReceipt(burnResult.hash)

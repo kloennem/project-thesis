@@ -158,42 +158,44 @@ function App() {
     }
 
     const signBurn = async (t) => {
-        const function_hex = web3.eth.abi.encodeFunctionSignature('burn(address,address,uint,uint)')
-        const Req = {
-            from: acc,
-            to: protocol2AddressSrc,
-            value: 0,
-            gas: 100000,
-            srcChain: (await prov.getNetwork()).chainId,
-            fun: function_hex,
-            recAddress: recipientAddress,
-            targetContract: protocol2AddressDest,
-            amount: tokenAmount,
-            stake: 0
-        }
-
-        let message = ethers.utils.solidityKeccak256(
-            ['address', 'address', 'uint256', 'uint256', 'uint256', 'bytes', 'address', 'address', 'uint', 'uint'],
-            [Req.from, Req.to, Req.value, Req.gas, Req.srcChain, Req.fun, Req.recAddress, Req.targetContract, Req.amount, Req.stake]
-        );
-
-        prov = new ethers.providers.Web3Provider(window.ethereum);
-        let signer = prov.getSigner();
-        const arrayifyMessage = await ethers.utils.arrayify(message)
-        const flatSignature = await signer.signMessage(arrayifyMessage)
-
-        fetch("http://localhost:8000/postBurn", {
-            method: "POST",
-            body: JSON.stringify({
-                reqStruct: Req,
-                signature: flatSignature
-            }),
-            headers: {
-                "Content-type": "application/json; charset=UTF-8"
+        try{
+            const function_hex = web3.eth.abi.encodeFunctionSignature('burn(address,address,uint,uint)')
+            const Req = {
+                from: acc,
+                to: protocol2AddressSrc,
+                value: 0,
+                gas: 100000,
+                srcChain: (await prov.getNetwork()).chainId,
+                fun: function_hex,
+                recAddress: recipientAddress,
+                targetContract: protocol2AddressDest,
+                amount: tokenAmount,
+                stake: 0
             }
-        })
-            .then((res) => res.json())
-            .then((req) => document.getElementById("helper1").value = req.message)
+
+            let message = ethers.utils.solidityKeccak256(
+                ['address', 'address', 'uint256', 'uint256', 'uint256', 'bytes', 'address', 'address', 'uint', 'uint'],
+                [Req.from, Req.to, Req.value, Req.gas, Req.srcChain, Req.fun, Req.recAddress, Req.targetContract, Req.amount, Req.stake]
+            );
+
+            prov = new ethers.providers.Web3Provider(window.ethereum);
+            let signer = prov.getSigner();
+            const arrayifyMessage = await ethers.utils.arrayify(message)
+            const flatSignature = await signer.signMessage(arrayifyMessage)
+
+            fetch("http://localhost:8000/postBurn", {
+                method: "POST",
+                body: JSON.stringify({
+                    reqStruct: Req,
+                    signature: flatSignature
+                }),
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8"
+                }
+            })
+                .then((res) => res.json())
+                .then((req) => document.getElementById("helper1").value = req.message)
+        }catch{}
     }
 
     return (
