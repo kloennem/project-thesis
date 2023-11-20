@@ -48,117 +48,35 @@ function App() {
 
     useEffect(() => {
         setNetwork();
-        setDestCh();
+        callSetDestChain();
     });
 
-    window.ethereum.on('networkChanged', function (networkId) {
-        document.getElementById("helper2").value = networkId
-        setNetwork();
-    });
 
-    window.ethereum.on('accountsChanged', function (accounts) {
-        callSetAcc();
-    });
-
-    const setNetwork = async (t) => {
-        prov = new ethers.providers.Web3Provider(window.ethereum);
-        let temp = ((await prov.getNetwork()).chainId)
-        if (temp === 5) {
-            protocol2AddressSrc = protocol2AddressSrcGoerli;
-            if(document.getElementById("chains").value === "goerli"){
-                protocol2AddressDest = protocol2AddressDestGoerli;
-            }
-            else if(document.getElementById("chains").value === "bnb_testnet"){
-                protocol2AddressDest = protocol2AddressDestBNBTestnet;
-            }
-            web3 = web3Goerli;
-            setCurrentNetwork("Görli");
-        }
-        else if (temp === 97) {
-            protocol2AddressSrc = protocol2AddressSrcBNBTestnet;
-            if(document.getElementById("chains").value === "goerli"){
-                protocol2AddressDest = protocol2AddressDestGoerli;
-            }
-            else if(document.getElementById("chains").value === "bnb_testnet"){
-                protocol2AddressDest = protocol2AddressDestBNBTestnet;
-            }
-            web3 = web3BNBTestnet;
-            setCurrentNetwork("BNB Testnet");
-        }
-        const account = (await prov.send('eth_requestAccounts'))[0];
-        setAcc(account)
-        transferContractSrc = new ethers.Contract(protocol2AddressSrc, Protocol2, prov.getSigner());
-    }
-
-    transferContractDest.on("Claim", async () => {
-        try{
-            getBalance();
-        }catch{}
-    })
-
-    const callSetAcc = async (t) => {
-        // t.preventDefault();
-        prov = new ethers.providers.Web3Provider(window.ethereum);
-        const account = (await prov.send('eth_requestAccounts'))[0];
-        setAcc(account)
-    };
-
-    const init = async () => {
-        const tC1 = await transferContractSrc.registerTokenContract(protocol2AddressDestGoerli);
-        await tC1.wait();
-        const tC1_2 = await transferContractSrc.registerTokenContract(protocol2AddressDestBNBTestnet);
-        await tC1_2.wait();
-        const tC2 = await transferContractDest.registerTokenContract(protocol2AddressSrcGoerli);
-        await tC2.wait();
-        const tC2_2 = await transferContractDest.registerTokenContract(protocol2AddressSrcBNBTestnet);
-        await tC2_2.wait();
-    };
+    setInterval(async function(){
+        fetch("http://localhost:8000/ping")
+    }, 55000)
 
     const startTransaction = async (t) => {
         t.preventDefault();
         // await init();
         await getBalance();
-        await signBurn();
+        // await signBurn();
         // let burnReceipt = await web3.eth.getTransactionReceipt(burned.hash)
-        // document.getElementById("helper2").value = protocol2AddressDest
         // document.getElementById("helper1").value = burned.hash
     };
 
     const getBalance = async (t) => {
         // t.preventDefault();    
-        try{
-        const balance110 = await transferContractSrc.balanceOf(acc)
-        const balance210 = await transferContractDest.balanceOf(acc)
-        const balance220 = await transferContractDest.balanceOf(recipientAddress)
-        document.getElementById("helper").value = balance110
-        document.getElementById("helper1").value = balance210
-        document.getElementById("helper2").value = balance220
-        }catch{}
+        try {
+            const balance110 = await transferContractSrc.balanceOf(acc)
+            const balance220 = await transferContractDest.balanceOf(recipientAddress)
+            document.getElementById("helper").value = balance110
+            document.getElementById("helper1").value = balance220
+        } catch { }
     };
-    
-    const setDestAddr = async (t) => {
-        document.getElementById("destAddr").value = acc
-        setRecipientAddress(acc)
-    };
-    
-    const setDestCh = async (t) => {
-        if(document.getElementById("chains").value === "goerli"){
-            protocol2AddressDest = protocol2AddressDestGoerli;
-            transferContractDest = transferContractDestGoerli;
-            document.getElementById("helper2").value = "dest chain 5"
-        }
-        else if(document.getElementById("chains").value === "bnb_testnet"){
-            protocol2AddressDest = protocol2AddressDestBNBTestnet;
-            transferContractDest = transferContractDestBNBTestnet;
-            document.getElementById("helper2").value = "dest chain 97"
-        }
-        else{
-            document.getElementById("helper2").value = "dest chain none"
-        }
-    }
 
     const signBurn = async (t) => {
-        try{
+        try {
             const function_hex = web3.eth.abi.encodeFunctionSignature('burn(address,address,uint,uint)')
             const Req = {
                 from: acc,
@@ -194,9 +112,102 @@ function App() {
                 }
             })
                 .then((res) => res.json())
-                .then((req) => document.getElementById("helper1").value = req.message)
-        }catch{}
+        } catch { }
     }
+
+    transferContractDestGoerli.on("Claim", async () => {
+        try {
+            getBalance();
+        } catch { }
+    })
+    transferContractDestBNBTestnet.on("Claim", async () => {
+        try {
+            getBalance();
+        } catch { }
+    })
+
+    const init = async () => {
+        try {
+            const tC1 = await transferContractSrc.registerTokenContract(protocol2AddressDestGoerli);
+            await tC1.wait();
+            const tC1_2 = await transferContractSrc.registerTokenContract(protocol2AddressDestBNBTestnet);
+            await tC1_2.wait();
+            const tC2 = await transferContractDest.registerTokenContract(protocol2AddressSrcGoerli);
+            await tC2.wait();
+            const tC2_2 = await transferContractDest.registerTokenContract(protocol2AddressSrcBNBTestnet);
+            await tC2_2.wait();
+        } catch { }
+    }
+
+    window.ethereum.on('networkChanged', function (networkId) {
+        setNetwork();
+    });
+
+    const setNetwork = async (t) => {
+        try {
+            prov = new ethers.providers.Web3Provider(window.ethereum);
+            let temp = ((await prov.getNetwork()).chainId)
+            if (temp === 5) {
+                protocol2AddressSrc = protocol2AddressSrcGoerli;
+                if (document.getElementById("chains").value === "goerli") {
+                    protocol2AddressDest = protocol2AddressDestGoerli;
+                }
+                else if (document.getElementById("chains").value === "bnb_testnet") {
+                    protocol2AddressDest = protocol2AddressDestBNBTestnet;
+                }
+                web3 = web3Goerli;
+                setCurrentNetwork("Görli");
+            }
+            else if (temp === 97) {
+                protocol2AddressSrc = protocol2AddressSrcBNBTestnet;
+                if (document.getElementById("chains").value === "goerli") {
+                    protocol2AddressDest = protocol2AddressDestGoerli;
+                }
+                else if (document.getElementById("chains").value === "bnb_testnet") {
+                    protocol2AddressDest = protocol2AddressDestBNBTestnet;
+                }
+                web3 = web3BNBTestnet;
+                setCurrentNetwork("BNB Testnet");
+            }
+            const account = (await prov.send('eth_requestAccounts'))[0];
+            setAcc(account)
+            transferContractSrc = new ethers.Contract(protocol2AddressSrc, Protocol2, prov.getSigner());
+        } catch { }
+    }
+
+    window.ethereum.on('accountsChanged', function (accounts) {
+        callSetAcc();
+    });
+
+    const callSetAcc = async (t) => {
+        try {
+            // t.preventDefault();
+            prov = new ethers.providers.Web3Provider(window.ethereum);
+            const account = (await prov.send('eth_requestAccounts'))[0];
+            setAcc(account)
+        } catch { }
+    };
+
+    const callSetDestChain = async (t) => {
+        try {
+            if (document.getElementById("chains").value === "goerli") {
+                protocol2AddressDest = protocol2AddressDestGoerli;
+                transferContractDest = transferContractDestGoerli;
+            }
+            else if (document.getElementById("chains").value === "bnb_testnet") {
+                protocol2AddressDest = protocol2AddressDestBNBTestnet;
+                transferContractDest = transferContractDestBNBTestnet;
+            }
+            else {
+            }
+        } catch { }
+    }
+
+    const callSetRecipientAddress = async (t) => {
+        document.getElementById("destAddr").value = acc
+        setRecipientAddress(acc)
+    };
+
 
     return (
         <div className="main">
@@ -231,7 +242,7 @@ function App() {
                             <label>
                                 Choose destination Blockchain:
                             </label>
-                            <select name="chains" id="chains" style={{ "width": "300px" }} onChange={setDestCh}>
+                            <select name="chains" id="chains" style={{ "width": "300px" }} onChange={callSetDestChain}>
                                 <option selected="selected" value="goerli">Görli</option>
                                 <option value="bnb_testnet">BNB Testnet</option>
                             </select>
@@ -252,10 +263,10 @@ function App() {
                                 style={{ "width": "250px" }}
                                 name="name"
                                 id="destAddr"
-                                onChange={(t) => setDestAddr}
+                                onChange={(t) => callSetRecipientAddress}
                             />
                         </form>
-                        <button className="button" type="submit" onClick={setDestAddr} style={{ "float": "right" }}>Same as source address</button>
+                        <button className="button" type="submit" onClick={callSetRecipientAddress} style={{ "float": "right" }}>Same as source address</button>
                     </div>
                 </div>
 
@@ -293,27 +304,32 @@ function App() {
                         </button>
                     </form>
                 </div>
-                <div className="row" style={{ "width": "70vw" }}>
-                    <input
-                        className="input"
-                        type="text"
-                        name="helper"
-                        id="helper"
-                    />
-                    <br />
-                    <input
-                        className="input"
-                        type="text"
-                        name="helper1"
-                        id="helper1"
-                    />
-                    <br />
-                    <input
-                        className="input"
-                        type="text"
-                        name="helper2"
-                        id="helper2"
-                    />
+
+                <div className="row" style={{ "width": "80vw" }}>
+                    <div class="box">
+                        <form className="form" style={{ "float": "left" }}>
+                            <label>
+                                amount of tokens of source address on source chain:
+                            </label>
+                            <input /* todo: make all inputs labels*/
+                                className="input"
+                                type="text"
+                                name="helper"
+                                id="helper"
+                            />
+                        </form>
+                        <form className="form" style={{ "float": "left" }}>
+                            <label>
+                                amount of tokens of destination address on destination chain:
+                            </label>
+                            <input
+                                className="input"
+                                type="text"
+                                name="helper1"
+                                id="helper1"
+                            />
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

@@ -831,7 +831,6 @@ const OracleTxInclusionVerifier = [
     }
   ]
 
-let burnResult;
 let executed;
 let transferContractSrc;
 let transferContractDest;
@@ -872,6 +871,10 @@ app.listen(8000, () => {
     console.log(`Server is running on port 8000.`);
 });
 
+app.get('/ping', (req, res) => {
+    res.json("")
+});
+
 app.post('/postBurn', (req, res) => {
     console.log(req.body.reqStruct);
     console.log(req.body.signature);
@@ -898,7 +901,7 @@ const burnTokens = async (reqStruct, signature) => {
             console.log("burn: chainID wrong")
         }
         console.log("start burn")
-        burnResult = await transferContractSrc.burn(reqStruct.recAddress, reqStruct.targetContract, reqStruct.amount, reqStruct.stake, reqStruct.from, { gasLimit: 5000000 });
+        let burnResult = await transferContractSrc.burn(reqStruct.recAddress, reqStruct.targetContract, reqStruct.amount, reqStruct.stake, reqStruct.from, { gasLimit: 5000000 });
         console.log("waiting for burn to finish")
         await burnResult.wait();
         map.set(burnResult.hash, reqStruct.srcChain);
@@ -909,30 +912,30 @@ const burnTokens = async (reqStruct, signature) => {
     }
 };
 
-transferContractSrcGoerli.on("Burn", async (from, to, contract, value) => {
+transferContractSrcGoerli.on("Burn", async (from, to, contract, value, event) => {
     console.log("burn event caught (Görli)");
     if(contract == protocol2AddressDestGoerli){
         console.log("start oracle on Görli")
-        await oracleContractGoerli.startOracle(burnResult.hash, 5);
+        await oracleContractGoerli.startOracle(event.transactionHash, 5);
     }
     else if(contract == protocol2AddressDestBNBTestnet){
         console.log("start oracle on BNB")
-        await oracleContractBNBTestnet.startOracle(burnResult.hash, 5);
+        await oracleContractBNBTestnet.startOracle(event.transactionHash, 5);
     }
     else{
         console.log("burn: contract wrong")
     }
 });
 
-transferContractSrcBNBTestnet.on("Burn", async (from, to, contract, value) => {
+transferContractSrcBNBTestnet.on("Burn", async (from, to, contract, value, event) => {
     console.log("burn event caught (BNBTestnet)");
     if(contract == protocol2AddressDestGoerli){
         console.log("start oracle on Görli")
-        await oracleContractGoerli.startOracle(burnResult.hash, 97);
+        await oracleContractGoerli.startOracle(event.transactionHash, 97);
     }
     else if(contract == protocol2AddressDestBNBTestnet){
         console.log("start oracle on BNB")
-        await oracleContractBNBTestnet.startOracle(burnResult.hash, 97);
+        await oracleContractBNBTestnet.startOracle(event.transactionHash, 97);
     }
     else{
         console.log("burn: contract wrong")
@@ -941,12 +944,12 @@ transferContractSrcBNBTestnet.on("Burn", async (from, to, contract, value) => {
 
 oracleContractGoerli.on("OraclePositive", async (currentHash) => {
     console.log("oraclePositive event caught (Görli)")
-    claimTokens(5);
+    claimTokens(currentHash, 5);
 });
 
 oracleContractBNBTestnet.on("OraclePositive", async (currentHash) => {
     console.log("oraclePositive event caught (BNBTestnet)")
-    claimTokens(97);
+    claimTokens(currentHash, 97);
 });
 
 setInterval(async function(){
@@ -968,7 +971,7 @@ setInterval(async function(){
     }
 }, 10000) // every 10 seconds
 
-const claimTokens = async (chainID) => {
+const claimTokens = async (currentHash, chainID) => {
     if(chainID == 5){
         transferContractDest = transferContractDestGoerli;
     }
@@ -979,30 +982,30 @@ const claimTokens = async (chainID) => {
         console.log("claim: chainID wrong")
     }
 
-    if(map.get(burnResult.hash) == 5){
+    if(map.get(currentHash) == 5){
         web3 = web3Goerli;
         provider = providerGoerli;
-        map.set(burnResult.hash, 0);
+        map.set(currentHash, 0);
     }
-    else if(map.get(burnResult.hash) == 97){
+    else if(map.get(currentHash) == 97){
         web3 = web3BNBTestnet;
         provider = providerBNBTestnet;
-        map.set(burnResult.hash, 0);
+        map.set(currentHash, 0);
     }
     else {
         console.log("source chain of hash not saved");
         return;
     }
 
-    let burnReceipt = await web3.eth.getTransactionReceipt(burnResult.hash)
+    let burnReceipt = await web3.eth.getTransactionReceipt(currentHash)
     while (burnReceipt === null && executed === false) {
         executed = true;
-        burnReceipt = await web3.eth.getTransactionReceipt(burnResult.hash)
+        burnReceipt = await web3.eth.getTransactionReceipt(currentHash)
     }
     executed = true;
     const block = await web3.eth.getBlock(burnReceipt.blockNumber);
-    const tx = await provider.getTransaction(burnResult.hash);
-    const txReceipt = await web3.eth.getTransactionReceipt(burnResult.hash);
+    const tx = await provider.getTransaction(currentHash);
+    const txReceipt = await web3.eth.getTransactionReceipt(currentHash);
     const rlpHeader = createRLPHeader(block);
     tx.value = (ethers.BigNumber.from(tx.value)).toString();
     tx.gasPrice = (ethers.BigNumber.from(tx.gasPrice)).toString();
@@ -1014,7 +1017,7 @@ const claimTokens = async (chainID) => {
     const rlpEncodedReceiptNodes = await createReceiptMerkleProof(block, tx.transactionIndex);
 
     console.log("before claim")
-    const claimResult = await transferContractDest.claim(rlpHeader, rlpEncodedTx, rlpEncodedReceipt, rlpEncodedTxNodes, rlpEncodedReceiptNodes, path, burnResult.hash, { gasLimit: 5000000 });
+    const claimResult = await transferContractDest.claim(rlpHeader, rlpEncodedTx, rlpEncodedReceipt, rlpEncodedTxNodes, rlpEncodedReceiptNodes, path, currentHash, { gasLimit: 5000000 });
     await claimResult.wait();
     console.log("after claim")
 };
