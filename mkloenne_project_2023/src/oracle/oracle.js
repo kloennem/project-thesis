@@ -369,15 +369,15 @@ async function start() {
             }
         }
         else if(chainID == 97){
-            const burnReceipt = await web3.eth.getTransactionReceipt(blockHash)
-            const block = await web3.eth.getBlock(burnReceipt.blockNumber);
+            const burnReceipt = await web3BNBTestnet.eth.getTransactionReceipt(blockHash)
+            const block = await web3BNBTestnet.eth.getBlock(burnReceipt.blockNumber);
             console.log("Oracle started on Görli")
             console.log("burn transaction on BNBTestnet")
-            while(provider.getBlockNumber()-block.blockNumber < 12){}
+            while(providerBNBTestnet.getBlockNumber()-block.blockNumber < 12){}
             console.log(block.transactions[burnReceipt.transactionIndex])
             console.log(blockHash)
             console.log(burnReceipt.status)
-            if(block.transactions[burnReceipt.transactionIndex].hash == blockHash && burnReceipt.status == true){
+            if(block.transactions[burnReceipt.transactionIndex] == blockHash && burnReceipt.status == true){
                 transactionVerified = true;
                 receiptVerified = true;
                 blockConfirmed = true;
@@ -397,8 +397,8 @@ async function start() {
         if(chainID == 5){
             console.log("Oracle started on BNBTestnet")
             console.log("burn transaction on Görli")
-            const burnReceipt = await web3BNBTestnet.eth.getTransactionReceipt(blockHash)
-            const block = await web3BNBTestnet.eth.getBlock(burnReceipt.blockNumber);
+            const burnReceipt = await web3.eth.getTransactionReceipt(blockHash)
+            const block = await web3.eth.getBlock(burnReceipt.blockNumber);
             while(provider.getBlockNumber()-block.blockNumber < 12){}
             console.log(block.transactions[burnReceipt.transactionIndex])
             console.log(blockHash)

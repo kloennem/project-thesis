@@ -838,6 +838,8 @@ let transferContractDest;
 let web3;
 let provider;
 
+const map = new Map();
+
 const web3Goerli = new Web3(new Web3.providers.HttpProvider('https://goerli.infura.io/v3/2e342128028646b9b9ea1ef796849e23'));
 const providerGoerli = new ethers.providers.Web3Provider(web3Goerli.currentProvider);
 const signerGoerli = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", providerGoerli)
@@ -895,9 +897,11 @@ const burnTokens = async (reqStruct, signature) => {
         else{
             console.log("burn: chainID wrong")
         }
+        console.log("start burn")
         burnResult = await transferContractSrc.burn(reqStruct.recAddress, reqStruct.targetContract, reqStruct.amount, reqStruct.stake, reqStruct.from, { gasLimit: 5000000 });
         console.log("waiting for burn to finish")
         await burnResult.wait();
+        map.set(burnResult.hash, reqStruct.srcChain);
         console.log(reqStruct.srcChain + ": forwarded burn hash " + burnResult.hash);
     }
     else {
@@ -948,16 +952,24 @@ oracleContractBNBTestnet.on("OraclePositive", async (currentHash) => {
 const claimTokens = async (chainID) => {
     if(chainID == 5){
         transferContractDest = transferContractDestGoerli;
-        web3 = web3Goerli;
-        provider = providerGoerli;
     }
     else if(chainID == 97){
         transferContractDest = transferContractDestBNBTestnet;
-        web3 = web3BNBTestnet;
-        provider = providerBNBTestnet;
     }
     else{
         console.log("claim: chainID wrong")
+    }
+    
+    if(map.get(burnResult.hash) == 5){
+        web3 = web3Goerli;
+        provider = providerGoerli;
+    }
+    else if(map.get(burnResult.hash) == 97){
+        web3 = web3BNBTestnet;
+        provider = providerBNBTestnet;
+    }
+    else {
+        console.log("source chain of hash not saved");
     }
 
     let burnReceipt = await web3.eth.getTransactionReceipt(burnResult.hash)

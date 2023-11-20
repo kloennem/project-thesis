@@ -8,9 +8,13 @@ import './App.css';
 // Access our wallet inside of our dapp
 // for Görli
 const web3Goerli = new Web3(new Web3.providers.HttpProvider("https://goerli.infura.io/v3/2e342128028646b9b9ea1ef796849e23"))
+const provider = new ethers.providers.Web3Provider(web3Goerli.currentProvider);
+const signer = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", provider)
 
 // for BNB Testnet
 const web3BNBTestnet = new Web3(new Web3.providers.HttpProvider('https://data-seed-prebsc-1-s1.binance.org:8545'))
+const providerBNBTestnet = new ethers.providers.WebSocketProvider("wss://go.getblock.io/8e10fd3fdea94028b9601386ef306bda");
+const signerBNBTestnet = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", providerBNBTestnet)
 
 
 // Contract addresses of the deployed smart contract
@@ -22,16 +26,18 @@ const protocol2AddressDestGoerli = "0xF715401a3240C75e219c05d9940Dea7bdb61Fb38"
 const protocol2AddressSrcBNBTestnet = "0xd21A7E1576AC660040b04B1699ed8c611c2Be72E"
 const protocol2AddressDestBNBTestnet = "0x620B4A8D7D13FA00fEc27607B59C217c6355A4bD"
 
+const transferContractDestGoerli = new ethers.Contract(protocol2AddressDestGoerli, Protocol2, signer)
+const transferContractDestBNBTestnet = new ethers.Contract(protocol2AddressDestBNBTestnet, Protocol2, signerBNBTestnet)
+
 let protocol2AddressSrc = protocol2AddressSrcGoerli;
 let protocol2AddressDest = protocol2AddressDestGoerli;
 let transferContractSrc;
-let transferContractDest;
+let transferContractDest = transferContractDestGoerli;
 let web3;
 
 let prov = new ethers.providers.Web3Provider(window.ethereum);
 prov.send('eth_requestAccounts', []);
 transferContractSrc = new ethers.Contract(protocol2AddressSrc, Protocol2, prov.getSigner());
-transferContractDest = new ethers.Contract(protocol2AddressDest, Protocol2, prov.getSigner());
 
 function App() {
     // Hold variables that will interact with our contract and frontend
@@ -42,6 +48,7 @@ function App() {
 
     useEffect(() => {
         setNetwork();
+        setDestCh();
     });
 
     window.ethereum.on('networkChanged', function (networkId) {
@@ -58,24 +65,35 @@ function App() {
         let temp = ((await prov.getNetwork()).chainId)
         if (temp === 5) {
             protocol2AddressSrc = protocol2AddressSrcGoerli;
-            protocol2AddressDest = protocol2AddressDestGoerli; // todo: change to BNB + init
+            if(document.getElementById("chains").value === "goerli"){
+                protocol2AddressDest = protocol2AddressDestGoerli;
+            }
+            else if(document.getElementById("chains").value === "bnb_testnet"){
+                protocol2AddressDest = protocol2AddressDestBNBTestnet;
+            }
             web3 = web3Goerli;
             setCurrentNetwork("Görli");
         }
         else if (temp === 97) {
             protocol2AddressSrc = protocol2AddressSrcBNBTestnet;
-            protocol2AddressDest = protocol2AddressDestBNBTestnet; // todo: change to Goerli + init
+            if(document.getElementById("chains").value === "goerli"){
+                protocol2AddressDest = protocol2AddressDestGoerli;
+            }
+            else if(document.getElementById("chains").value === "bnb_testnet"){
+                protocol2AddressDest = protocol2AddressDestBNBTestnet;
+            }
             web3 = web3BNBTestnet;
             setCurrentNetwork("BNB Testnet");
         }
         const account = (await prov.send('eth_requestAccounts'))[0];
         setAcc(account)
         transferContractSrc = new ethers.Contract(protocol2AddressSrc, Protocol2, prov.getSigner());
-        transferContractDest = new ethers.Contract(protocol2AddressDest, Protocol2, prov.getSigner());
     }
 
     transferContractDest.on("Claim", async () => {
+        try{
             getBalance();
+        }catch{}
     })
 
     const callSetAcc = async (t) => {
@@ -102,24 +120,42 @@ function App() {
         await getBalance();
         await signBurn();
         // let burnReceipt = await web3.eth.getTransactionReceipt(burned.hash)
-        // document.getElementById("helper2").value = temp
+        // document.getElementById("helper2").value = protocol2AddressDest
         // document.getElementById("helper1").value = burned.hash
     };
 
     const getBalance = async (t) => {
         // t.preventDefault();    
+        try{
         const balance110 = await transferContractSrc.balanceOf(acc)
         const balance210 = await transferContractDest.balanceOf(acc)
         const balance220 = await transferContractDest.balanceOf(recipientAddress)
         document.getElementById("helper").value = balance110
         document.getElementById("helper1").value = balance210
         document.getElementById("helper2").value = balance220
+        }catch{}
     };
-
+    
     const setDestAddr = async (t) => {
         document.getElementById("destAddr").value = acc
         setRecipientAddress(acc)
     };
+    
+    const setDestCh = async (t) => {
+        if(document.getElementById("chains").value === "goerli"){
+            protocol2AddressDest = protocol2AddressDestGoerli;
+            transferContractDest = transferContractDestGoerli;
+            document.getElementById("helper2").value = "dest chain 5"
+        }
+        else if(document.getElementById("chains").value === "bnb_testnet"){
+            protocol2AddressDest = protocol2AddressDestBNBTestnet;
+            transferContractDest = transferContractDestBNBTestnet;
+            document.getElementById("helper2").value = "dest chain 97"
+        }
+        else{
+            document.getElementById("helper2").value = "dest chain none"
+        }
+    }
 
     const signBurn = async (t) => {
         const function_hex = web3.eth.abi.encodeFunctionSignature('burn(address,address,uint,uint)')
@@ -193,7 +229,7 @@ function App() {
                             <label>
                                 Choose destination Blockchain:
                             </label>
-                            <select name="chains" style={{ "width": "300px" }}>
+                            <select name="chains" id="chains" style={{ "width": "300px" }} onChange={setDestCh}>
                                 <option selected="selected" value="goerli">Görli</option>
                                 <option value="bnb_testnet">BNB Testnet</option>
                             </select>
