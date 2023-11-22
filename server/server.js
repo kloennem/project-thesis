@@ -906,41 +906,23 @@ const burnTokens = async (reqStruct, signature) => {
         await burnResult.wait();
         map.set(burnResult.hash, reqStruct.srcChain);
         console.log(reqStruct.srcChain + ": forwarded burn hash " + burnResult.hash);
+
+        if(reqStruct.targetContract == protocol2AddressDestGoerli){
+            console.log("start oracle on Görli")
+            await oracleContractGoerli.startOracle(await burnResult.hash, reqStruct.srcChain);
+        }
+        else if(reqStruct.targetContract == protocol2AddressDestBNBTestnet){
+            console.log("start oracle on BNB")
+            await oracleContractBNBTestnet.startOracle(await burnResult.hash, reqStruct.srcChain);
+        }
+        else{
+            console.log("burn: contract wrong")
+        }
     }
     else {
         console.log("signature verification not successful")
     }
 };
-
-transferContractSrcGoerli.on("Burn", async (from, to, contract, value, event) => {
-    console.log("burn event caught (Görli)");
-    if(contract == protocol2AddressDestGoerli){
-        console.log("start oracle on Görli")
-        await oracleContractGoerli.startOracle(event.transactionHash, 5);
-    }
-    else if(contract == protocol2AddressDestBNBTestnet){
-        console.log("start oracle on BNB")
-        await oracleContractBNBTestnet.startOracle(event.transactionHash, 5);
-    }
-    else{
-        console.log("burn: contract wrong")
-    }
-});
-
-transferContractSrcBNBTestnet.on("Burn", async (from, to, contract, value, event) => {
-    console.log("burn event caught (BNBTestnet)");
-    if(contract == protocol2AddressDestGoerli){
-        console.log("start oracle on Görli")
-        await oracleContractGoerli.startOracle(event.transactionHash, 97);
-    }
-    else if(contract == protocol2AddressDestBNBTestnet){
-        console.log("start oracle on BNB")
-        await oracleContractBNBTestnet.startOracle(event.transactionHash, 97);
-    }
-    else{
-        console.log("burn: contract wrong")
-    }
-});
 
 oracleContractGoerli.on("OraclePositive", async (currentHash) => {
     console.log("oraclePositive event caught (Görli)")
@@ -954,22 +936,22 @@ oracleContractBNBTestnet.on("OraclePositive", async (currentHash) => {
 
 setInterval(async function(){
     let eventFilterGoerli = oracleContractGoerli.filters.OraclePositive()
-    let eventsGoerli = await oracleContractGoerli.queryFilter(eventFilterGoerli, -12, -2)
+    let eventsGoerli = await oracleContractGoerli.queryFilter(eventFilterGoerli, -62, -2)
     for(let i = 0; i < eventsGoerli.length; i++){
         if(map.get(eventsGoerli[0].args.burnBlockHash) == 5 || map.get(eventsGoerli[0].args.burnBlockHash) == 97){
             console.log("interval: OraclePositive event caught (Görli)");
-            claimTokens(5);
+            claimTokens(eventsGoerli[0].args.burnBlockHash, 5);
         }
     }
     let eventFilterBNBTestnet = oracleContractBNBTestnet.filters.OraclePositive()
-    let eventsBNBTestnet = await oracleContractBNBTestnet.queryFilter(eventFilterBNBTestnet, -12, -2)
+    let eventsBNBTestnet = await oracleContractBNBTestnet.queryFilter(eventFilterBNBTestnet, -62, -2)
     for(let i = 0; i < eventsBNBTestnet.length; i++){
         if(map.get(eventsBNBTestnet[0].args.burnBlockHash) == 5 || map.get(eventsBNBTestnet[0].args.burnBlockHash) == 97){
             console.log("interval: OraclePositive event caught (Görli)");
-            claimTokens(97);
+            claimTokens(eventsBNBTestnet[0].args.burnBlockHash, 97);
         }
     }
-}, 10000) // every 10 seconds
+}, 60000) // every 60 seconds
 
 const claimTokens = async (currentHash, chainID) => {
     if(chainID == 5){

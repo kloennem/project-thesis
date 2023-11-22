@@ -45,6 +45,7 @@ function App() {
     const [acc, setAcc] = useState(0)                                 // source address
     const [tokenAmount, setAmount] = useState(0)
     const [currentNetwork, setCurrentNetwork] = useState("")
+    const [status, setStatus] = useState("")
 
     useEffect(() => {
         setNetwork();
@@ -52,15 +53,15 @@ function App() {
     });
 
 
-    setInterval(async function(){
-        fetch("http://localhost:8000/ping")
-    }, 55000)
+    // setInterval(async function(){
+    //     fetch("http://localhost:8000/ping")
+    // }, 55000)
 
     const startTransaction = async (t) => {
         t.preventDefault();
         // await init();
         await getBalance();
-        // await signBurn();
+        await signBurn();
         // let burnReceipt = await web3.eth.getTransactionReceipt(burned.hash)
         // document.getElementById("helper1").value = burned.hash
     };
@@ -112,17 +113,20 @@ function App() {
                 }
             })
                 .then((res) => res.json())
+            setStatus("transaction started")
         } catch { }
     }
 
     transferContractDestGoerli.on("Claim", async () => {
         try {
             getBalance();
+            setStatus("transaction completed")
         } catch { }
     })
     transferContractDestBNBTestnet.on("Claim", async () => {
         try {
             getBalance();
+            setStatus("transaction completed")
         } catch { }
     })
 
@@ -297,11 +301,18 @@ function App() {
                 </div>
 
                 {/* start transaction button */}
-                <div className="row" style={{ "width": "56vw" }}>
-                    <form className="form">
-                        <button className="button" onClick={startTransaction} style={{ "width": "500px" }} type="button">
+                <div className="row" style={{ "width": "70vw" }}>
+                    <form className="form" style={{ "float": "left" }}>
+                        <button className="button" onClick={startTransaction} style={{ "width": "300px" }} type="button">
                             Start Transaction
                         </button>
+                    </form>
+                    <form className="form" style={{ "float": "left" }}>
+                        <label>
+                            transfer status:
+                            <br />
+                            {status}
+                        </label>
                     </form>
                 </div>
 
@@ -332,7 +343,7 @@ function App() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
 

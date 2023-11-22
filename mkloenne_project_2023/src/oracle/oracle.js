@@ -347,22 +347,22 @@ const map = new Map();
 console.log("Start")
 setInterval(async function(){
     let eventFilterGoerli = oracleContractGoerli.filters.StartOracle()
-    let eventsGoerli = await oracleContractGoerli.queryFilter(eventFilterGoerli, -12, -2)
+    let eventsGoerli = await oracleContractGoerli.queryFilter(eventFilterGoerli, -62, -2)
     for(let i = 0; i < eventsGoerli.length; i++){
-        if(map.get(eventsGoerli[0].args.burnBlockHash) != true){
+        if(map.get(eventsGoerli[i].args.burnBlockHash) == false){
             console.log("interval: start event caught (Görli)")
-            startOracleGoerli(eventsGoerli[0].args.burnBlockHash, eventsGoerli[0].args.chainID);
+            startOracleGoerli(eventsGoerli[i].args.burnBlockHash, eventsGoerli[i].args.chainID);
         }
     }
     let eventFilterBNBTestnet = oracleContractBNBTestnet.filters.StartOracle()
-    let eventsBNBTestnet = await oracleContractBNBTestnet.queryFilter(eventFilterBNBTestnet, -12, -2)
+    let eventsBNBTestnet = await oracleContractBNBTestnet.queryFilter(eventFilterBNBTestnet, -62, -2)
     for(let i = 0; i < eventsBNBTestnet.length; i++){
-        if(map.get(eventsBNBTestnet[0].args.burnBlockHash) != true){
+        if(map.get(eventsBNBTestnet[i].args.burnBlockHash) == false){
             console.log("interval: start event caught (Görli)")
-            startOracleBNBTestnet(eventsBNBTestnet[0].args.burnBlockHash, eventsBNBTestnet[0].args.chainID);
+            startOracleBNBTestnet(eventsBNBTestnet[i].args.burnBlockHash, eventsBNBTestnet[i].args.chainID);
         }
     }
-}, 10000) // every 10 seconds
+}, 60000) // every 60 seconds
 
 oracleContractGoerli.on("StartOracle", async (blockHash, chainID) => {
     console.log("start event caught (Görli)")
@@ -468,4 +468,7 @@ async function startOracleBNBTestnet(blockHash, chainID){
     map.set(blockHash, true);
     await oracleContractBNBTestnet.fromOracle(transactionVerified, receiptVerified, blockConfirmed, blockHash);
     console.log("Response sent (BNBTestnet)");
+    blockConfirmed = false;
+    transactionVerified = false;
+    receiptVerified = false;
 }
