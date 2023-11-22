@@ -582,10 +582,6 @@ app.listen(8000, () => {
     console.log(`Server is running on port 8000.`);
 });
 
-app.get('/ping', (req, res) => {
-    res.json("")
-});
-
 app.get('/init', async (req, res) => {
     console.log("start init");
     const tC1 = await transferContractGoerli.registerTokenContract(protocol2AddressGoerli);

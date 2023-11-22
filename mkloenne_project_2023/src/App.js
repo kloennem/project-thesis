@@ -43,16 +43,11 @@ function App() {
         callSetDestChain();
     });
 
-
-    // setInterval(async function(){
-    //     fetch("http://localhost:8000/ping")
-    // }, 55000)
-
     const startTransaction = async (t) => {
         t.preventDefault();
         // await init();
         await getBalance();
-        // await signBurn();
+        await signBurn();
     };
 
     const getBalance = async (t) => {
@@ -103,13 +98,11 @@ function App() {
 
     transferContractDestGoerli.on("Claim", async () => {
         try {
-            getBalance();
             setStatus("transaction completed")
         } catch {}
     })
     transferContractDestBNBTestnet.on("Claim", async () => {
         try {
-            getBalance();
             setStatus("transaction completed")
         } catch {}
     })
@@ -290,6 +283,12 @@ function App() {
                                 <br />
                                 {balanceReceiverField}
                             </label>
+                        </form>
+                        <br />
+                        <form className="form" style={{ "float": "left" }}>
+                            <button className="button" onClick={getBalance} style={{"width": "300px"}} type="button">
+                                Get Balance
+                            </button>
                         </form>
                     </div>
                 </div>
