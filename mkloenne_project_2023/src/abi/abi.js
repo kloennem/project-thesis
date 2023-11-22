@@ -154,8 +154,7 @@ export const Protocol2 = [
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -198,8 +197,7 @@ export const Protocol2 = [
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [],
@@ -212,8 +210,7 @@ export const Protocol2 = [
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -274,8 +271,7 @@ export const Protocol2 = [
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [],
@@ -288,8 +284,7 @@ export const Protocol2 = [
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [],
@@ -302,8 +297,7 @@ export const Protocol2 = [
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -389,11 +383,6 @@ export const Protocol2 = [
           "type": "uint256"
         },
         {
-          "internalType": "uint256",
-          "name": "stake",
-          "type": "uint256"
-        },
-        {
           "internalType": "address",
           "name": "sender",
           "type": "address"
@@ -422,70 +411,12 @@ export const Protocol2 = [
           "type": "bytes"
         },
         {
-          "internalType": "bytes",
-          "name": "rlpMerkleProofTx",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "rlpMerkleProofReceipt",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "path",
-          "type": "bytes"
-        },
-        {
           "internalType": "bytes32",
           "name": "txHash",
           "type": "bytes32"
         }
       ],
       "name": "claim",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes",
-          "name": "rlpHeader",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "serializedTx",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "serializedReceipt",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "rlpMerkleProofTx",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "rlpMerkleProofReceipt",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "path",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "txHash",
-          "type": "bytes32"
-        }
-      ],
-      "name": "confirm",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"

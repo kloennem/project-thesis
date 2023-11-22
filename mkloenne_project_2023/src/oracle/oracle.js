@@ -84,16 +84,6 @@ const OracleTxInclusionVerifier = [
           "type": "bool"
         },
         {
-          "internalType": "bool",
-          "name": "_verifyReceiptResult",
-          "type": "bool"
-        },
-        {
-          "internalType": "bool",
-          "name": "_blockConfirmationResult",
-          "type": "bool"
-        },
-        {
           "internalType": "bytes32",
           "name": "_currentBurnBlockHash",
           "type": "bytes32"
@@ -106,36 +96,6 @@ const OracleTxInclusionVerifier = [
     },
     {
       "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
-        {
-          "internalType": "uint8",
-          "name": "",
-          "type": "uint8"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
         {
           "internalType": "bytes32",
           "name": "_currentBurnBlockHash",
@@ -151,176 +111,7 @@ const OracleTxInclusionVerifier = [
         }
       ],
       "stateMutability": "payable",
-      "type": "function",
-      "payable": true
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
-        {
-          "internalType": "uint8",
-          "name": "",
-          "type": "uint8"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "_currentBurnBlockHash",
-          "type": "bytes32"
-        }
-      ],
-      "name": "verifyReceipt",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "payable",
-      "type": "function",
-      "payable": true
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "_currentBurnBlockHash",
-          "type": "bytes32"
-        }
-      ],
-      "name": "isBlockConfirmed",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "payable",
-      "type": "function",
-      "payable": true
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
-        {
-          "internalType": "uint8",
-          "name": "",
-          "type": "uint8"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        }
-      ],
-      "name": "verifyState",
-      "outputs": [
-        {
-          "internalType": "uint8",
-          "name": "",
-          "type": "uint8"
-        }
-      ],
-      "stateMutability": "payable",
-      "type": "function",
-      "payable": true
-    },
-    {
-      "inputs": [],
-      "name": "getCurrentBurnBlockHashes",
-      "outputs": [
-        {
-          "internalType": "bytes32[20]",
-          "name": "",
-          "type": "bytes32[20]"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function",
-      "constant": true
-    },
-    {
-      "inputs": [],
-      "name": "getCurrentCounter",
-      "outputs": [
-        {
-          "internalType": "uint256[20]",
-          "name": "_verifyTxResultCounter",
-          "type": "uint256[20]"
-        },
-        {
-          "internalType": "uint256[20]",
-          "name": "_verifyReceiptCounter",
-          "type": "uint256[20]"
-        },
-        {
-          "internalType": "uint256[20]",
-          "name": "_blockConfirmationResultCounter",
-          "type": "uint256[20]"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     }
   ]
 
@@ -332,16 +123,14 @@ const web3BNBTestnet = new Web3(new Web3.providers.HttpProvider('https://data-se
 const providerBNBTestnet = new ethers.providers.WebSocketProvider("wss://go.getblock.io/8e10fd3fdea94028b9601386ef306bda");
 const signerBNBTestnet = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", providerBNBTestnet)
 
-const oracleAddressGoerli = "0xBb06ff78d76dC75e03B588D1a73f5e14E4Cc9074"
+const oracleAddressGoerli = "0x2e04289aC656ad2AacEe244beffE7aAec20778DE"
 
-const oracleAddressBNBTestnet = "0x9c882Bb872C0A4b5f4dc0ED544A26BFb731192E8"
+const oracleAddressBNBTestnet = "0xf28056ac8A93eb5eA9C0864940dD21675BfE85d8"
 
 const oracleContractGoerli = new ethers.Contract(oracleAddressGoerli, OracleTxInclusionVerifier, signer);
 const oracleContractBNBTestnet = new ethers.Contract(oracleAddressBNBTestnet, OracleTxInclusionVerifier, signerBNBTestnet);
 
-let blockConfirmed = false;
 let transactionVerified = false;
-let receiptVerified = false;
 const map = new Map();
 
 console.log("Start")
@@ -381,13 +170,8 @@ async function startOracleGoerli(blockHash, chainID){
         const burnReceipt = await web3.eth.getTransactionReceipt(blockHash)
         const block = await web3.eth.getBlock(burnReceipt.blockNumber);
         while(provider.getBlockNumber()-block.blockNumber < 12){}
-        console.log(block.transactions[burnReceipt.transactionIndex])
-        console.log(blockHash)
-        console.log(burnReceipt.status)
         if(block.transactions[burnReceipt.transactionIndex] == blockHash && burnReceipt.status == true){
             transactionVerified = true;
-            receiptVerified = true;
-            blockConfirmed = true;
         }
         else{
             console.log("transaction not contained in block")
@@ -400,13 +184,8 @@ async function startOracleGoerli(blockHash, chainID){
         console.log("Oracle started on Görli")
         console.log("burn transaction on BNBTestnet")
         while(providerBNBTestnet.getBlockNumber()-block.blockNumber < 12){}
-        console.log(block.transactions[burnReceipt.transactionIndex])
-        console.log(blockHash)
-        console.log(burnReceipt.status)
         if(block.transactions[burnReceipt.transactionIndex] == blockHash && burnReceipt.status == true){
             transactionVerified = true;
-            receiptVerified = true;
-            blockConfirmed = true;
         }
         else{
             console.log("transaction not contained in block")
@@ -418,7 +197,7 @@ async function startOracleGoerli(blockHash, chainID){
         return;
     }
     map.set(blockHash, true);
-    await oracleContractGoerli.fromOracle(transactionVerified, receiptVerified, blockConfirmed, blockHash);
+    await oracleContractGoerli.fromOracle(transactionVerified, blockHash);
     console.log("Response sent (Görli)");
 }
 
@@ -429,13 +208,8 @@ async function startOracleBNBTestnet(blockHash, chainID){
         const burnReceipt = await web3.eth.getTransactionReceipt(blockHash)
         const block = await web3.eth.getBlock(burnReceipt.blockNumber);
         while(provider.getBlockNumber()-block.blockNumber < 12){}
-        console.log(block.transactions[burnReceipt.transactionIndex])
-        console.log(blockHash)
-        console.log(burnReceipt.status)
         if(block.transactions[burnReceipt.transactionIndex] == blockHash && burnReceipt.status == true){
             transactionVerified = true;
-            receiptVerified = true;
-            blockConfirmed = true;
         }
         else{
             console.log("transaction not contained in block")
@@ -448,13 +222,8 @@ async function startOracleBNBTestnet(blockHash, chainID){
         const burnReceipt = await web3BNBTestnet.eth.getTransactionReceipt(blockHash)
         const block = await web3BNBTestnet.eth.getBlock(burnReceipt.blockNumber);
         while(provider.getBlockNumber()-block.blockNumber < 12){}
-        console.log(block.transactions[burnReceipt.transactionIndex])
-        console.log(blockHash)
-        console.log(burnReceipt.status)
         if(block.transactions[burnReceipt.transactionIndex] == blockHash && burnReceipt.status == true){
             transactionVerified = true;
-            receiptVerified = true;
-            blockConfirmed = true;
         }
         else{
             console.log("transaction not contained in block")
@@ -466,9 +235,7 @@ async function startOracleBNBTestnet(blockHash, chainID){
         return;
     }
     map.set(blockHash, true);
-    await oracleContractBNBTestnet.fromOracle(transactionVerified, receiptVerified, blockConfirmed, blockHash);
+    await oracleContractBNBTestnet.fromOracle(transactionVerified, blockHash);
     console.log("Response sent (BNBTestnet)");
-    blockConfirmed = false;
     transactionVerified = false;
-    receiptVerified = false;
 }

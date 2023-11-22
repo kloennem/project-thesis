@@ -3,15 +3,10 @@ const ethers = require("ethers")
 const express = require('express');
 const cors = require('cors');
 
-const RLP = require('rlp');
-const { BaseTrie: Trie } = require('merkle-patricia-tree');
 const {
-    asyncTriePut,
-    newTrie,
     createRLPHeader,
     createRLPTransaction,
-    createRLPReceipt,
-    encodeToBuffer
+    createRLPReceipt
 } = require('./utils');
 
 const app = express();
@@ -171,8 +166,7 @@ const Protocol2 = [
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -215,8 +209,7 @@ const Protocol2 = [
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [],
@@ -229,8 +222,7 @@ const Protocol2 = [
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -291,8 +283,7 @@ const Protocol2 = [
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [],
@@ -305,8 +296,7 @@ const Protocol2 = [
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [],
@@ -319,8 +309,7 @@ const Protocol2 = [
         }
       ],
       "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     },
     {
       "inputs": [
@@ -406,11 +395,6 @@ const Protocol2 = [
           "type": "uint256"
         },
         {
-          "internalType": "uint256",
-          "name": "stake",
-          "type": "uint256"
-        },
-        {
           "internalType": "address",
           "name": "sender",
           "type": "address"
@@ -439,70 +423,12 @@ const Protocol2 = [
           "type": "bytes"
         },
         {
-          "internalType": "bytes",
-          "name": "rlpMerkleProofTx",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "rlpMerkleProofReceipt",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "path",
-          "type": "bytes"
-        },
-        {
           "internalType": "bytes32",
           "name": "txHash",
           "type": "bytes32"
         }
       ],
       "name": "claim",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "bytes",
-          "name": "rlpHeader",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "serializedTx",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "serializedReceipt",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "rlpMerkleProofTx",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "rlpMerkleProofReceipt",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "path",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "txHash",
-          "type": "bytes32"
-        }
-      ],
-      "name": "confirm",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -591,16 +517,6 @@ const OracleTxInclusionVerifier = [
           "type": "bool"
         },
         {
-          "internalType": "bool",
-          "name": "_verifyReceiptResult",
-          "type": "bool"
-        },
-        {
-          "internalType": "bool",
-          "name": "_blockConfirmationResult",
-          "type": "bool"
-        },
-        {
           "internalType": "bytes32",
           "name": "_currentBurnBlockHash",
           "type": "bytes32"
@@ -613,36 +529,6 @@ const OracleTxInclusionVerifier = [
     },
     {
       "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
-        {
-          "internalType": "uint8",
-          "name": "",
-          "type": "uint8"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
         {
           "internalType": "bytes32",
           "name": "_currentBurnBlockHash",
@@ -658,211 +544,36 @@ const OracleTxInclusionVerifier = [
         }
       ],
       "stateMutability": "payable",
-      "type": "function",
-      "payable": true
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
-        {
-          "internalType": "uint8",
-          "name": "",
-          "type": "uint8"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "_currentBurnBlockHash",
-          "type": "bytes32"
-        }
-      ],
-      "name": "verifyReceipt",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "payable",
-      "type": "function",
-      "payable": true
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "_currentBurnBlockHash",
-          "type": "bytes32"
-        }
-      ],
-      "name": "isBlockConfirmed",
-      "outputs": [
-        {
-          "internalType": "bool",
-          "name": "",
-          "type": "bool"
-        }
-      ],
-      "stateMutability": "payable",
-      "type": "function",
-      "payable": true
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
-        {
-          "internalType": "uint8",
-          "name": "",
-          "type": "uint8"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        },
-        {
-          "internalType": "bytes",
-          "name": "",
-          "type": "bytes"
-        }
-      ],
-      "name": "verifyState",
-      "outputs": [
-        {
-          "internalType": "uint8",
-          "name": "",
-          "type": "uint8"
-        }
-      ],
-      "stateMutability": "payable",
-      "type": "function",
-      "payable": true
-    },
-    {
-      "inputs": [],
-      "name": "getCurrentBurnBlockHashes",
-      "outputs": [
-        {
-          "internalType": "bytes32[20]",
-          "name": "",
-          "type": "bytes32[20]"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function",
-      "constant": true
-    },
-    {
-      "inputs": [],
-      "name": "getCurrentCounter",
-      "outputs": [
-        {
-          "internalType": "uint256[20]",
-          "name": "_verifyTxResultCounter",
-          "type": "uint256[20]"
-        },
-        {
-          "internalType": "uint256[20]",
-          "name": "_verifyReceiptCounter",
-          "type": "uint256[20]"
-        },
-        {
-          "internalType": "uint256[20]",
-          "name": "_blockConfirmationResultCounter",
-          "type": "uint256[20]"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function",
-      "constant": true
+      "type": "function"
     }
   ]
+  
+  const web3Goerli = new Web3(new Web3.providers.HttpProvider('https://goerli.infura.io/v3/2e342128028646b9b9ea1ef796849e23'));
+  const providerGoerli = new ethers.providers.Web3Provider(web3Goerli.currentProvider);
+  const signerGoerli = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", providerGoerli)
+  
+  const web3BNBTestnet = new Web3(new Web3.providers.HttpProvider('https://data-seed-prebsc-1-s1.binance.org:8545'))
+  const providerBNBTestnet = new ethers.providers.WebSocketProvider("wss://go.getblock.io/8e10fd3fdea94028b9601386ef306bda");
+  const signerBNBTestnet = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", providerBNBTestnet)
+
+  const protocol2AddressGoerli = "0x4ADA1d5f84f374E2496e0AA537373D5f3853bE78"
+  const oracleAddressGoerli = "0x2e04289aC656ad2AacEe244beffE7aAec20778DE"
+  
+  const protocol2AddressBNBTestnet = "0x8ebD4A32960D9e255b083A18030B4B3C58D01263"
+  const oracleAddressBNBTestnet = "0xf28056ac8A93eb5eA9C0864940dD21675BfE85d8"
+  
+const transferContractGoerli = new ethers.Contract(protocol2AddressGoerli, Protocol2, signerGoerli);
+const oracleContractGoerli = new ethers.Contract(oracleAddressGoerli, OracleTxInclusionVerifier, signerGoerli);
+
+const transferContractBNBTestnet = new ethers.Contract(protocol2AddressBNBTestnet, Protocol2, signerBNBTestnet);
+const oracleContractBNBTestnet = new ethers.Contract(oracleAddressBNBTestnet, OracleTxInclusionVerifier, signerBNBTestnet);
 
 let executed;
 let transferContractSrc;
 let transferContractDest;
 let web3;
 let provider;
-
-const map = new Map();
-
-const web3Goerli = new Web3(new Web3.providers.HttpProvider('https://goerli.infura.io/v3/2e342128028646b9b9ea1ef796849e23'));
-const providerGoerli = new ethers.providers.Web3Provider(web3Goerli.currentProvider);
-const signerGoerli = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", providerGoerli)
-
-const web3BNBTestnet = new Web3(new Web3.providers.HttpProvider('https://data-seed-prebsc-1-s1.binance.org:8545'))
-const providerBNBTestnet = new ethers.providers.WebSocketProvider("wss://go.getblock.io/8e10fd3fdea94028b9601386ef306bda");
-const signerBNBTestnet = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", providerBNBTestnet)
-
-const protocol2AddressSrcGoerli = "0xe996bd5E663a711CB4eFB0a30AF4D18A7DE45143"
-const protocol2AddressDestGoerli = "0xF715401a3240C75e219c05d9940Dea7bdb61Fb38"
-const oracleAddressGoerli = "0xBb06ff78d76dC75e03B588D1a73f5e14E4Cc9074"
-
-const protocol2AddressSrcBNBTestnet = "0xd21A7E1576AC660040b04B1699ed8c611c2Be72E"
-const protocol2AddressDestBNBTestnet = "0x620B4A8D7D13FA00fEc27607B59C217c6355A4bD"
-const oracleAddressBNBTestnet = "0x9c882Bb872C0A4b5f4dc0ED544A26BFb731192E8"
-
-const transferContractSrcGoerli = new ethers.Contract(protocol2AddressSrcGoerli, Protocol2, signerGoerli);
-const transferContractDestGoerli = new ethers.Contract(protocol2AddressDestGoerli, Protocol2, signerGoerli);
-const oracleContractGoerli = new ethers.Contract(oracleAddressGoerli, OracleTxInclusionVerifier, signerGoerli);
-
-const transferContractSrcBNBTestnet = new ethers.Contract(protocol2AddressSrcBNBTestnet, Protocol2, signerBNBTestnet);
-const transferContractDestBNBTestnet = new ethers.Contract(protocol2AddressDestBNBTestnet, Protocol2, signerBNBTestnet);
-const oracleContractBNBTestnet = new ethers.Contract(oracleAddressBNBTestnet, OracleTxInclusionVerifier, signerBNBTestnet);
-
+const hashToChainMap = new Map();
 
 app.use(cors());
 app.use(express.json());
@@ -875,6 +586,20 @@ app.get('/ping', (req, res) => {
     res.json("")
 });
 
+app.get('/init', async (req, res) => {
+    console.log("start init");
+    const tC1 = await transferContractGoerli.registerTokenContract(protocol2AddressGoerli);
+    await tC1.wait();
+    const tC1_2 = await transferContractGoerli.registerTokenContract(protocol2AddressBNBTestnet);
+    await tC1_2.wait();
+    const tC2 = await transferContractBNBTestnet.registerTokenContract(protocol2AddressGoerli);
+    await tC2.wait();
+    const tC2_2 = await transferContractBNBTestnet.registerTokenContract(protocol2AddressBNBTestnet);
+    await tC2_2.wait();
+    console.log("init completed");
+    res.json("")
+})
+
 app.post('/postBurn', (req, res) => {
     console.log(req.body.reqStruct);
     console.log(req.body.signature);
@@ -885,33 +610,33 @@ app.post('/postBurn', (req, res) => {
 
 const burnTokens = async (reqStruct, signature) => {
     executed = false;
-    const message = ethers.utils.arrayify(ethers.utils.solidityKeccak256(['address', 'address', 'uint256', 'uint256', 'uint256', 'bytes', 'address', 'address', 'uint', 'uint'], [reqStruct.from, reqStruct.to, reqStruct.value, reqStruct.gas, reqStruct.srcChain, reqStruct.fun, reqStruct.recAddress, reqStruct.targetContract, reqStruct.amount, reqStruct.stake]))
+    const message = ethers.utils.arrayify(ethers.utils.solidityKeccak256(['address', 'uint', 'address', 'address', 'uint'], [reqStruct.from, reqStruct.srcChain, reqStruct.recAddress, reqStruct.targetContract, reqStruct.amount]))
     const messageVerified = await ethers.utils.verifyMessage(message, signature)
     if (messageVerified.toLowerCase() == reqStruct.from) {
         console.log("signature verification successful")
         if(reqStruct.srcChain == 5){
             console.log("burn chain: Görli")
-            transferContractSrc = transferContractSrcGoerli;
+            transferContractSrc = transferContractGoerli;
         }
         else if(reqStruct.srcChain == 97){
             console.log("burn chain: BNB")
-            transferContractSrc = transferContractSrcBNBTestnet;
+            transferContractSrc = transferContractBNBTestnet;
         }
         else{
             console.log("burn: chainID wrong")
         }
         console.log("start burn")
-        let burnResult = await transferContractSrc.burn(reqStruct.recAddress, reqStruct.targetContract, reqStruct.amount, reqStruct.stake, reqStruct.from, { gasLimit: 5000000 });
+        let burnResult = await transferContractSrc.burn(reqStruct.recAddress, reqStruct.targetContract, reqStruct.amount, reqStruct.from, { gasLimit: 5000000 });
         console.log("waiting for burn to finish")
         await burnResult.wait();
-        map.set(burnResult.hash, reqStruct.srcChain);
+        hashToChainMap.set(burnResult.hash, reqStruct.srcChain);
         console.log(reqStruct.srcChain + ": forwarded burn hash " + burnResult.hash);
 
-        if(reqStruct.targetContract == protocol2AddressDestGoerli){
+        if(reqStruct.targetContract == protocol2AddressGoerli){
             console.log("start oracle on Görli")
             await oracleContractGoerli.startOracle(await burnResult.hash, reqStruct.srcChain);
         }
-        else if(reqStruct.targetContract == protocol2AddressDestBNBTestnet){
+        else if(reqStruct.targetContract == protocol2AddressBNBTestnet){
             console.log("start oracle on BNB")
             await oracleContractBNBTestnet.startOracle(await burnResult.hash, reqStruct.srcChain);
         }
@@ -938,7 +663,7 @@ setInterval(async function(){
     let eventFilterGoerli = oracleContractGoerli.filters.OraclePositive()
     let eventsGoerli = await oracleContractGoerli.queryFilter(eventFilterGoerli, -62, -2)
     for(let i = 0; i < eventsGoerli.length; i++){
-        if(map.get(eventsGoerli[0].args.burnBlockHash) == 5 || map.get(eventsGoerli[0].args.burnBlockHash) == 97){
+        if(hashToChainMap.get(eventsGoerli[0].args.burnBlockHash) == 5 || hashToChainMap.get(eventsGoerli[0].args.burnBlockHash) == 97){
             console.log("interval: OraclePositive event caught (Görli)");
             claimTokens(eventsGoerli[0].args.burnBlockHash, 5);
         }
@@ -946,7 +671,7 @@ setInterval(async function(){
     let eventFilterBNBTestnet = oracleContractBNBTestnet.filters.OraclePositive()
     let eventsBNBTestnet = await oracleContractBNBTestnet.queryFilter(eventFilterBNBTestnet, -62, -2)
     for(let i = 0; i < eventsBNBTestnet.length; i++){
-        if(map.get(eventsBNBTestnet[0].args.burnBlockHash) == 5 || map.get(eventsBNBTestnet[0].args.burnBlockHash) == 97){
+        if(hashToChainMap.get(eventsBNBTestnet[0].args.burnBlockHash) == 5 || hashToChainMap.get(eventsBNBTestnet[0].args.burnBlockHash) == 97){
             console.log("interval: OraclePositive event caught (Görli)");
             claimTokens(eventsBNBTestnet[0].args.burnBlockHash, 97);
         }
@@ -955,24 +680,24 @@ setInterval(async function(){
 
 const claimTokens = async (currentHash, chainID) => {
     if(chainID == 5){
-        transferContractDest = transferContractDestGoerli;
+        transferContractDest = transferContractGoerli;
     }
     else if(chainID == 97){
-        transferContractDest = transferContractDestBNBTestnet;
+        transferContractDest = transferContractBNBTestnet;
     }
     else{
         console.log("claim: chainID wrong")
     }
 
-    if(map.get(currentHash) == 5){
+    if(hashToChainMap.get(currentHash) == 5){
         web3 = web3Goerli;
         provider = providerGoerli;
-        map.set(currentHash, 0);
+        hashToChainMap.set(currentHash, 0);
     }
-    else if(map.get(currentHash) == 97){
+    else if(hashToChainMap.get(currentHash) == 97){
         web3 = web3BNBTestnet;
         provider = providerBNBTestnet;
-        map.set(currentHash, 0);
+        hashToChainMap.set(currentHash, 0);
     }
     else {
         console.log("source chain of hash not saved");
@@ -994,42 +719,8 @@ const claimTokens = async (currentHash, chainID) => {
     const rlpEncodedTx = createRLPTransaction(tx);
     const rlpEncodedReceipt = createRLPReceipt(txReceipt);
 
-    const path = encodeToBuffer(tx.transactionIndex);
-    const rlpEncodedTxNodes = await createTxMerkleProof(block, tx.transactionIndex);
-    const rlpEncodedReceiptNodes = await createReceiptMerkleProof(block, tx.transactionIndex);
-
     console.log("before claim")
-    const claimResult = await transferContractDest.claim(rlpHeader, rlpEncodedTx, rlpEncodedReceipt, rlpEncodedTxNodes, rlpEncodedReceiptNodes, path, currentHash, { gasLimit: 5000000 });
+    const claimResult = await transferContractDest.claim(rlpHeader, rlpEncodedTx, rlpEncodedReceipt, currentHash, { gasLimit: 5000000 });
     await claimResult.wait();
     console.log("after claim")
-};
-
-const createTxMerkleProof = async (block, transactionIndex) => {
-    const trie = newTrie();
-
-    for (let i = 0; i < block.transactions.length; i++) {
-        const tx = await provider.getTransaction(block.transactions[i]);
-        tx.value = (ethers.BigNumber.from(tx.value)).toString();
-        tx.gasPrice = (ethers.BigNumber.from(tx.gasPrice)).toString();
-        const rlpTx = createRLPTransaction(tx);
-        const key = RLP.encode(i);
-        await asyncTriePut(trie, key, rlpTx);
-    }
-
-    const key = RLP.encode(transactionIndex);
-    return encodeToBuffer(await Trie.createProof(trie, key));
-};
-
-const createReceiptMerkleProof = async (block, transactionIndex) => {
-    const trie = newTrie();
-
-    for (let i = 0; i < block.transactions.length; i++) {
-        const receipt = await web3.eth.getTransactionReceipt(block.transactions[i]);
-        const rlpReceipt = createRLPReceipt(receipt);
-        const key = RLP.encode(i);
-        await asyncTriePut(trie, key, rlpReceipt);
-    }
-
-    const key = RLP.encode(transactionIndex);
-    return encodeToBuffer(await Trie.createProof(trie, key));
 };

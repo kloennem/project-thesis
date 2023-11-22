@@ -8,44 +8,35 @@ import './App.css';
 // Access our wallet inside of our dapp
 // for Görli
 const web3Goerli = new Web3(new Web3.providers.HttpProvider("https://goerli.infura.io/v3/2e342128028646b9b9ea1ef796849e23"))
-const provider = new ethers.providers.Web3Provider(web3Goerli.currentProvider);
-const signer = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", provider)
+const providerGoerli = new ethers.providers.Web3Provider(web3Goerli.currentProvider);
 
 // for BNB Testnet
-const web3BNBTestnet = new Web3(new Web3.providers.HttpProvider('https://data-seed-prebsc-1-s1.binance.org:8545'))
 const providerBNBTestnet = new ethers.providers.WebSocketProvider("wss://go.getblock.io/8e10fd3fdea94028b9601386ef306bda");
-const signerBNBTestnet = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", providerBNBTestnet)
 
 
 // Contract addresses of the deployed smart contract
 // for Görli
-const protocol2AddressSrcGoerli = "0xe996bd5E663a711CB4eFB0a30AF4D18A7DE45143"
-const protocol2AddressDestGoerli = "0xF715401a3240C75e219c05d9940Dea7bdb61Fb38"
+const protocol2AddressGoerli = "0x4ADA1d5f84f374E2496e0AA537373D5f3853bE78"
 
 // for BNB Testnet
-const protocol2AddressSrcBNBTestnet = "0xd21A7E1576AC660040b04B1699ed8c611c2Be72E"
-const protocol2AddressDestBNBTestnet = "0x620B4A8D7D13FA00fEc27607B59C217c6355A4bD"
+const protocol2AddressBNBTestnet = "0x8ebD4A32960D9e255b083A18030B4B3C58D01263"
 
-const transferContractDestGoerli = new ethers.Contract(protocol2AddressDestGoerli, Protocol2, signer)
-const transferContractDestBNBTestnet = new ethers.Contract(protocol2AddressDestBNBTestnet, Protocol2, signerBNBTestnet)
+const transferContractDestGoerli = new ethers.Contract(protocol2AddressGoerli, Protocol2, providerGoerli)
+const transferContractDestBNBTestnet = new ethers.Contract(protocol2AddressBNBTestnet, Protocol2, providerBNBTestnet)
 
-let protocol2AddressSrc = protocol2AddressSrcGoerli;
-let protocol2AddressDest = protocol2AddressDestGoerli;
+let protocol2AddressDest;
 let transferContractSrc;
-let transferContractDest = transferContractDestGoerli;
-let web3;
-
-let prov = new ethers.providers.Web3Provider(window.ethereum);
-prov.send('eth_requestAccounts', []);
-transferContractSrc = new ethers.Contract(protocol2AddressSrc, Protocol2, prov.getSigner());
+let transferContractDest;
 
 function App() {
     // Hold variables that will interact with our contract and frontend
     const [recipientAddress, setRecipientAddress] = useState(0);      // recipient address
-    const [acc, setAcc] = useState(0)                                 // source address
+    const [sender, setSender] = useState(0)                           // source address
     const [tokenAmount, setAmount] = useState(0)
     const [currentNetwork, setCurrentNetwork] = useState("")
     const [status, setStatus] = useState("")
+    const [balanceSenderField, setBalanceSenderField] = useState("-")
+    const [balanceReceiverField, setBalanceReceiverField] = useState("-")
 
     useEffect(() => {
         setNetwork();
@@ -61,43 +52,36 @@ function App() {
         t.preventDefault();
         // await init();
         await getBalance();
-        await signBurn();
-        // let burnReceipt = await web3.eth.getTransactionReceipt(burned.hash)
-        // document.getElementById("helper1").value = burned.hash
+        // await signBurn();
     };
 
     const getBalance = async (t) => {
-        // t.preventDefault();    
         try {
-            const balance110 = await transferContractSrc.balanceOf(acc)
-            const balance220 = await transferContractDest.balanceOf(recipientAddress)
-            document.getElementById("helper").value = balance110
-            document.getElementById("helper1").value = balance220
-        } catch { }
+            let balanceSender = await transferContractSrc.balanceOf(sender)
+            let balanceReceiver = await transferContractDest.balanceOf(recipientAddress)
+            balanceSender = JSON.stringify(parseInt(balanceSender), null, 4)
+            balanceReceiver = JSON.stringify(parseInt(balanceReceiver), null, 4)
+            setBalanceSenderField(balanceSender)
+            setBalanceReceiverField(balanceReceiver)
+        } catch {}
     };
 
     const signBurn = async (t) => {
         try {
-            const function_hex = web3.eth.abi.encodeFunctionSignature('burn(address,address,uint,uint)')
+            let prov = new ethers.providers.Web3Provider(window.ethereum);
             const Req = {
-                from: acc,
-                to: protocol2AddressSrc,
-                value: 0,
-                gas: 100000,
+                from: sender,
                 srcChain: (await prov.getNetwork()).chainId,
-                fun: function_hex,
                 recAddress: recipientAddress,
                 targetContract: protocol2AddressDest,
                 amount: tokenAmount,
-                stake: 0
             }
 
             let message = ethers.utils.solidityKeccak256(
-                ['address', 'address', 'uint256', 'uint256', 'uint256', 'bytes', 'address', 'address', 'uint', 'uint'],
-                [Req.from, Req.to, Req.value, Req.gas, Req.srcChain, Req.fun, Req.recAddress, Req.targetContract, Req.amount, Req.stake]
+                ['address', 'uint', 'address', 'address', 'uint'],
+                [Req.from, Req.srcChain, Req.recAddress, Req.targetContract, Req.amount]
             );
 
-            prov = new ethers.providers.Web3Provider(window.ethereum);
             let signer = prov.getSigner();
             const arrayifyMessage = await ethers.utils.arrayify(message)
             const flatSignature = await signer.signMessage(arrayifyMessage)
@@ -114,102 +98,77 @@ function App() {
             })
                 .then((res) => res.json())
             setStatus("transaction started")
-        } catch { }
+        } catch {}
     }
 
     transferContractDestGoerli.on("Claim", async () => {
         try {
             getBalance();
             setStatus("transaction completed")
-        } catch { }
+        } catch {}
     })
     transferContractDestBNBTestnet.on("Claim", async () => {
         try {
             getBalance();
             setStatus("transaction completed")
-        } catch { }
+        } catch {}
     })
 
     const init = async () => {
         try {
-            const tC1 = await transferContractSrc.registerTokenContract(protocol2AddressDestGoerli);
-            await tC1.wait();
-            const tC1_2 = await transferContractSrc.registerTokenContract(protocol2AddressDestBNBTestnet);
-            await tC1_2.wait();
-            const tC2 = await transferContractDest.registerTokenContract(protocol2AddressSrcGoerli);
-            await tC2.wait();
-            const tC2_2 = await transferContractDest.registerTokenContract(protocol2AddressSrcBNBTestnet);
-            await tC2_2.wait();
-        } catch { }
+            fetch("http://localhost:8000/init")
+        } catch {}
     }
 
-    window.ethereum.on('networkChanged', function (networkId) {
+    window.ethereum.on('networkChanged', function () {
         setNetwork();
     });
 
     const setNetwork = async (t) => {
         try {
-            prov = new ethers.providers.Web3Provider(window.ethereum);
-            let temp = ((await prov.getNetwork()).chainId)
-            if (temp === 5) {
-                protocol2AddressSrc = protocol2AddressSrcGoerli;
-                if (document.getElementById("chains").value === "goerli") {
-                    protocol2AddressDest = protocol2AddressDestGoerli;
-                }
-                else if (document.getElementById("chains").value === "bnb_testnet") {
-                    protocol2AddressDest = protocol2AddressDestBNBTestnet;
-                }
-                web3 = web3Goerli;
+            let prov = new ethers.providers.Web3Provider(window.ethereum);
+            let currentChain = ((await prov.getNetwork()).chainId)
+            if (currentChain === 5) {
+                transferContractSrc = new ethers.Contract(protocol2AddressGoerli, Protocol2, prov);
                 setCurrentNetwork("Görli");
             }
-            else if (temp === 97) {
-                protocol2AddressSrc = protocol2AddressSrcBNBTestnet;
-                if (document.getElementById("chains").value === "goerli") {
-                    protocol2AddressDest = protocol2AddressDestGoerli;
-                }
-                else if (document.getElementById("chains").value === "bnb_testnet") {
-                    protocol2AddressDest = protocol2AddressDestBNBTestnet;
-                }
-                web3 = web3BNBTestnet;
+            else if (currentChain === 97) {
+                transferContractSrc = new ethers.Contract(protocol2AddressBNBTestnet, Protocol2, prov);
                 setCurrentNetwork("BNB Testnet");
             }
             const account = (await prov.send('eth_requestAccounts'))[0];
-            setAcc(account)
-            transferContractSrc = new ethers.Contract(protocol2AddressSrc, Protocol2, prov.getSigner());
-        } catch { }
+            setSender(account)
+        } catch {}
     }
 
-    window.ethereum.on('accountsChanged', function (accounts) {
+    window.ethereum.on('accountsChanged', function () {
         callSetAcc();
     });
 
     const callSetAcc = async (t) => {
         try {
-            // t.preventDefault();
-            prov = new ethers.providers.Web3Provider(window.ethereum);
+            let prov = new ethers.providers.Web3Provider(window.ethereum);
             const account = (await prov.send('eth_requestAccounts'))[0];
-            setAcc(account)
-        } catch { }
+            setSender(account)
+        } catch {}
     };
 
     const callSetDestChain = async (t) => {
         try {
             if (document.getElementById("chains").value === "goerli") {
-                protocol2AddressDest = protocol2AddressDestGoerli;
+                protocol2AddressDest = protocol2AddressGoerli;
                 transferContractDest = transferContractDestGoerli;
             }
             else if (document.getElementById("chains").value === "bnb_testnet") {
-                protocol2AddressDest = protocol2AddressDestBNBTestnet;
+                protocol2AddressDest = protocol2AddressBNBTestnet;
                 transferContractDest = transferContractDestBNBTestnet;
             }
-            else {
-            }
-        } catch { }
+        } catch {}
     }
 
     const callSetRecipientAddress = async (t) => {
-        document.getElementById("destAddr").value = acc
-        setRecipientAddress(acc)
+        document.getElementById("destAddr").value = sender
+        setRecipientAddress(sender)
     };
 
 
@@ -222,7 +181,7 @@ function App() {
                     <label>
                         Source address:
                         <br />
-                        {acc}
+                        {sender}
                     </label>
                     <button className="button" type="submit" onClick={callSetAcc}>
                         Reload source address
@@ -321,24 +280,16 @@ function App() {
                         <form className="form" style={{ "float": "left" }}>
                             <label>
                                 amount of tokens of source address on source chain:
+                                <br />
+                                {balanceSenderField}
                             </label>
-                            <input /* todo: make all inputs labels*/
-                                className="input"
-                                type="text"
-                                name="helper"
-                                id="helper"
-                            />
                         </form>
                         <form className="form" style={{ "float": "left" }}>
                             <label>
                                 amount of tokens of destination address on destination chain:
+                                <br />
+                                {balanceReceiverField}
                             </label>
-                            <input
-                                className="input"
-                                type="text"
-                                name="helper1"
-                                id="helper1"
-                            />
                         </form>
                     </div>
                 </div>

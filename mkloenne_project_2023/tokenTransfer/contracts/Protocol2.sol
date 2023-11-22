@@ -21,26 +21,12 @@ contract Protocol2 is ERC20 {
         uint burnTime;          // specifies the block number of the block containing the burn tx
     }
 
-    struct ConfirmData {
-        address claimContract;  // address of the contract that should have processed the claim tx
-        address burnContract;   // address of the contract that should have processed the burn tx
-        address sender;         // sender who burnt the tokens
-        bool isClaimValid;      // true if claim tx has been successfully executed (e.g., no require statement triggered)
-        uint burnTime;          // specifies the block number of the block containing the burn tx
-    }
-
     OracleTxInclusionVerifier txInclusionVerifier;
     mapping(bytes32 => bool) claimedTransactions;
     mapping(bytes32 => bool) confirmedClaimTransactions;
     uint chainIdentifier;
     mapping(address => bool) participatingTokenContracts;  // addresses of the token contracts living on other blockchains
     uint8 constant TRANSFER_FEE = 10;  // 1/10 of the transfer amount
-    uint constant REQUIRED_STAKE = 0;
-    uint8 constant REQUIRED_TX_CONFIRMATIONS = 5;  // number of blocks that have to follow the block containing a tx to consider it confirmed
-    uint constant FAIR_CLAIM_PERIOD = 20;  // Number of blocks that must follow the block containing the burn tx.
-                                           // Posting a claim within this period results in transferring the fees to the burner.
-                                           // If the claim is posted after this period, the client submitting the claim gets the fees.
-    uint constant FAIR_CONFIRM_PERIOD = 45; // similar to FAIR_CLAIM_PERIOD but intended for confirm tx
 
     uint fee;
     address immutable masterAddress;
@@ -63,11 +49,10 @@ contract Protocol2 is ERC20 {
         participatingTokenContracts[tokenContract] = true;
     }
 
-    function burn(address recipient, address claimContract, uint value, uint stake, address sender) public {
+    function burn(address recipient, address claimContract, uint value, address sender) public {
         require(recipient != address(0), "recipient address must not be zero address");
         require(participatingTokenContracts[claimContract] == true, "claim contract address is not registered");
-        require(stake == REQUIRED_STAKE, 'provided stake does not match required stake');
-        _burn(sender, value + stake);
+        _burn(sender, value);
         emit Burn(sender, recipient, claimContract, value);
     }
 
@@ -75,9 +60,6 @@ contract Protocol2 is ERC20 {
         bytes memory rlpHeader,             // rlp-encoded header of the block containing burn tx along with its receipt
         bytes calldata serializedTx,        // serialized burn tx
         bytes calldata serializedReceipt,   // serialized receipt of burn tx (burn receipt)
-        bytes memory rlpMerkleProofTx,      // rlp-encoded Merkle proof of Membership for burn tx (later passed to relay)
-        bytes memory rlpMerkleProofReceipt, // rlp-encoded Merkle proof of Membership for burn receipt (later passed to relay)
-        bytes memory path,                  // the path from the root node down to the burn tx/receipt in the corresponding Merkle tries (tx, receipt).
                                             // path is the same for both tx and its receipt.
         bytes32 txHash
     ) public {
@@ -92,16 +74,13 @@ contract Protocol2 is ERC20 {
         require(c.isBurnValid == true, "burn transaction was not successful (e.g., require statement was violated)");
 
         // verify inclusion of burn transaction
-        require(txInclusionVerifier.verifyTransaction(0, rlpHeader, REQUIRED_TX_CONFIRMATIONS, serializedTx, path, rlpMerkleProofTx, txHash) == true, "burn transaction does not exist or has not enough confirmations");
-
-        // verify inclusion of receipt
-        require(txInclusionVerifier.verifyReceipt(0, rlpHeader, REQUIRED_TX_CONFIRMATIONS, serializedReceipt, path, rlpMerkleProofReceipt, txHash) == true, "burn receipt does not exist or has not enough confirmations");
+        require(txInclusionVerifier.verifyTransaction(txHash) == true, "burn transaction does not exist or has not enough confirmations");
 
         fee = calculateFee(c.value, TRANSFER_FEE);
         uint remainingValue = c.value - fee;
         address feeRecipient = c.recipient;
 
-        if (msg.sender != c.recipient && txInclusionVerifier.isBlockConfirmed(0, keccak256(rlpHeader), FAIR_CLAIM_PERIOD, txHash)) {
+        if (msg.sender != c.recipient) {
             // other client wants to claim fees
             // fair claim period has elapsed -> fees go to msg.sender
             feeRecipient = msg.sender;
@@ -114,42 +93,6 @@ contract Protocol2 is ERC20 {
 
         claimedTransactions[keccak256(serializedTx)] = true; // IMPORTANT: prevent this tx from being used for further claims
         emit Claim(c.burnContract, c.sender, c.burnTime);
-    }
-
-    function confirm(
-        bytes memory rlpHeader,             // rlp-encoded header of the block containing claim tx along with its receipt
-        bytes calldata serializedTx,        // serialized claim tx
-        bytes calldata serializedReceipt,   // serialized receipt of claim tx ('claim receipt')
-        bytes memory rlpMerkleProofTx,      // rlp-encoded Merkle proof of Membership for claim tx (later passed to relay)
-        bytes memory rlpMerkleProofReceipt, // rlp-encoded Merkle proof of Membership for claim receipt (later passed to relay)
-        bytes memory path,                  // the path from the root node down to the claim tx/receipt in the corresponding Merkle tries (tx, receipt).
-                                            // path is the same for both tx and its receipt.
-        bytes32 txHash
-    ) public {
-        require(confirmedClaimTransactions[keccak256(serializedTx)] == false, "claim tx is already confirmed");
-
-        ConfirmData memory c = extractConfirm(extractRLPEncoding(serializedTx), extractRLPEncoding(serializedReceipt));
-
-        // check pre-conditions
-        require(participatingTokenContracts[c.claimContract] == true, "claim contract address is not registered");
-        require(c.burnContract == address(this), "this contract has not been specified as burn contract");
-        require(c.isClaimValid == true, "claim transaction was not successful (e.g., require statement was violated)");
-
-        // verify inclusion of burn transaction
-        bool txExists = txInclusionVerifier.verifyTransaction(0, rlpHeader, REQUIRED_TX_CONFIRMATIONS, serializedTx, path, rlpMerkleProofTx, txHash);
-        require(txExists == true, "claim transaction does not exist or has not enough confirmations");
-
-        // verify inclusion of receipt
-        bool receiptExists = txInclusionVerifier.verifyReceipt(0, rlpHeader, REQUIRED_TX_CONFIRMATIONS, serializedReceipt, path, rlpMerkleProofReceipt, txHash);
-        require(receiptExists == true, "claim receipt does not exist or has not enough confirmations");
-
-        confirmedClaimTransactions[txHash] = true; // IMPORTANT: prevent this tx from being used for further claims
-
-        address stakeRecipient = c.sender;
-        if (c.burnTime + FAIR_CONFIRM_PERIOD < block.number) {
-            stakeRecipient = msg.sender;
-        }
-        _mint(stakeRecipient, REQUIRED_STAKE);
     }
 
     function extractClaim(bytes memory rlpHeader, bytes memory rlpTransaction, bytes memory rlpReceipt) private pure returns (ClaimData memory) {
@@ -206,45 +149,6 @@ contract Protocol2 is ERC20 {
         }
 
         return 0;
-    }
-
-    function extractConfirm(bytes memory rlpTransaction, bytes memory rlpReceipt) private pure returns (ConfirmData memory) {
-        ConfirmData memory c;
-
-        // parse transaction
-        RLPReader.RLPItem[] memory transaction = rlpTransaction.toRlpItem().toList();
-        uint8 idx;
-
-        if (transaction.length == 12) {
-            // EIP-1559
-            idx = 5;
-        } else if (transaction.length == 11) {
-            // EIP-2930
-            idx = 4;
-        } else if (transaction.length == 9) {
-            // legacy
-            idx = 3;
-        } else {
-            revert("invalid length of RLP transaction");
-        }
-        c.claimContract = transaction[idx].toAddress();
-
-        // parse receipt
-        RLPReader.RLPItem[] memory receipt = rlpReceipt.toRlpItem().toList();
-        c.isClaimValid = receipt[0].toBoolean();
-
-        // read logs
-        // IMPORTANT: if tx inclusion verifier emits events the indices below may higher depending on the order of event submissions
-        RLPReader.RLPItem[] memory logs = receipt[3].toList();
-        RLPReader.RLPItem[] memory claimEvent = logs[2].toList();  // logs[0] and logs[1] contain the transfer events emitted by the ECR20 method _mint (called twice in claim method)
-        RLPReader.RLPItem[] memory claimEventTopics = claimEvent[1].toList();  // topics contain all indexed event fields
-
-        // read value from claim event
-        c.burnContract = address(uint160(claimEventTopics[1].toUint()));  // indices of indexed fields start at 1 (0 is reserved for the hash of the event signature)
-        c.sender = address(uint160(claimEventTopics[2].toUint()));
-        c.burnTime = claimEventTopics[3].toUint();
-
-        return c;
     }
 
     /**
