@@ -63,6 +63,10 @@ function App() {
 
     const signBurn = async (t) => {
         try {
+            if(Number(balanceSenderField) < tokenAmount){
+                setStatus("not enough tokens")
+            }
+            else{
             let prov = new ethers.providers.Web3Provider(window.ethereum);
             const Req = {
                 from: sender,
@@ -93,6 +97,7 @@ function App() {
             })
                 .then((res) => res.json())
             setStatus("transaction started")
+        }
         } catch {}
     }
 
@@ -159,10 +164,17 @@ function App() {
         } catch {}
     }
 
-    const callSetRecipientAddress = async (t) => {
+    const setSenderAsRecipient = async (t) => {
         document.getElementById("destAddr").value = sender
         setRecipientAddress(sender)
     };
+
+    const callSetRecipientAddress = async (t) => {
+        setStatus("setRec")
+        let address = document.getElementById("destAddr").value;
+        address = ethers.utils.getAddress(address)
+        setRecipientAddress(address)
+    }
 
 
     return (
@@ -219,10 +231,15 @@ function App() {
                                 style={{ "width": "250px" }}
                                 name="name"
                                 id="destAddr"
-                                onChange={(t) => callSetRecipientAddress}
                             />
                         </form>
-                        <button className="button" type="submit" onClick={callSetRecipientAddress} style={{ "float": "right" }}>Same as source address</button>
+                        <button className="button" type="submit" onClick={setSenderAsRecipient} style={{ "float": "right" }}>
+                            Same as source address
+                        </button>
+                        <br />
+                        <button className="button" type="submit" onClick={callSetRecipientAddress} style={{ "float": "right" }}>
+                            Submit destination address
+                        </button>
                     </div>
                 </div>
 
