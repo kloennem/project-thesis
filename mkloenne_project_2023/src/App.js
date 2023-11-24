@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import Web3 from "web3";
 import { ethers } from "ethers";
-import { Protocol2 } from "./abi/abi";
+import { TransferContract } from "./abi/abi";
 import './App.css';
 
 
 // Access our wallet inside of our dapp
 // for Görli
-const web3Goerli = new Web3(new Web3.providers.HttpProvider("https://goerli.infura.io/v3/2e342128028646b9b9ea1ef796849e23"))
+const web3Goerli = new Web3(new Web3.providers.HttpProvider("https://goerli.infura.io/v3/2e342128028646b9b9ea1ef796849e23"));
 const providerGoerli = new ethers.providers.Web3Provider(web3Goerli.currentProvider);
 
 // for BNB Testnet
@@ -16,27 +16,27 @@ const providerBNBTestnet = new ethers.providers.WebSocketProvider("wss://go.getb
 
 // Contract addresses of the deployed smart contract
 // for Görli
-const protocol2AddressGoerli = "0x724f1ba0eDdf17DfE025aBAA245c5d897b2000e2"
+const transferAddressGoerli = "0x545DB59ADE84e2596D9CDF21B62B4d5A0C500a5a";
 
 // for BNB Testnet
-const protocol2AddressBNBTestnet = "0x40D281C3E826D08098775a792728fdf10A81640E"
+const transferAddressBNBTestnet = "0xedc7f92E5E011Bb6bF451E1999355106DE7FDD02";
 
-const transferContractDestGoerli = new ethers.Contract(protocol2AddressGoerli, Protocol2, providerGoerli)
-const transferContractDestBNBTestnet = new ethers.Contract(protocol2AddressBNBTestnet, Protocol2, providerBNBTestnet)
+const transferContractDestGoerli = new ethers.Contract(transferAddressGoerli, TransferContract, providerGoerli);
+const transferContractDestBNBTestnet = new ethers.Contract(transferAddressBNBTestnet, TransferContract, providerBNBTestnet);
 
-let protocol2AddressDest;
+let transferAddressDest;
 let transferContractSrc;
 let transferContractDest;
 
 function App() {
     // Hold variables that will interact with our contract and frontend
-    const [recipientAddress, setRecipientAddress] = useState(0);      // recipient address
-    const [sender, setSender] = useState(0)                           // source address
-    const [tokenAmount, setAmount] = useState(0)
-    const [currentNetwork, setCurrentNetwork] = useState("")
-    const [status, setStatus] = useState("")
-    const [balanceSenderField, setBalanceSenderField] = useState("-")
-    const [balanceReceiverField, setBalanceReceiverField] = useState("-")
+    const [sender, setSender] = useState(0);
+    const [currentNetwork, setCurrentNetwork] = useState("");
+    const [recipientAddress, setRecipientAddress] = useState(0);
+    const [tokenAmount, setAmount] = useState(0);
+    const [status, setStatus] = useState("");
+    const [balanceSenderField, setBalanceSenderField] = useState("-");
+    const [balanceReceiverField, setBalanceReceiverField] = useState("-");
 
     useEffect(() => {
         setNetwork();
@@ -52,70 +52,72 @@ function App() {
 
     const getBalance = async (t) => {
         try {
-            let balanceSender = await transferContractSrc.balanceOf(sender)
-            let balanceReceiver = await transferContractDest.balanceOf(recipientAddress)
-            balanceSender = JSON.stringify(parseInt(balanceSender), null, 4)
-            balanceReceiver = JSON.stringify(parseInt(balanceReceiver), null, 4)
-            setBalanceSenderField(balanceSender)
-            setBalanceReceiverField(balanceReceiver)
-        } catch {}
+            let balanceSender = await transferContractSrc.balanceOf(sender);
+            let balanceReceiver = await transferContractDest.balanceOf(recipientAddress);
+            balanceSender = JSON.stringify(parseInt(balanceSender), null, 4);
+            balanceReceiver = JSON.stringify(parseInt(balanceReceiver), null, 4);
+            setBalanceSenderField(balanceSender);
+            setBalanceReceiverField(balanceReceiver);
+        } catch { }
     };
 
     const signBurn = async (t) => {
         try {
-            if(Number(balanceSenderField) < tokenAmount){
-                setStatus("not enough tokens")
+            if (Number(balanceSenderField) < tokenAmount) {
+                setStatus("not enough tokens");
             }
-            else{
-            let prov = new ethers.providers.Web3Provider(window.ethereum);
-            const Req = {
-                from: sender,
-                srcChain: (await prov.getNetwork()).chainId,
-                recAddress: recipientAddress,
-                targetContract: protocol2AddressDest,
-                amount: tokenAmount,
+            else {
+                let provider = new ethers.providers.Web3Provider(window.ethereum);
+                const Req = {
+                    from: sender,
+                    srcChain: (await provider.getNetwork()).chainId,
+                    recAddress: recipientAddress,
+                    targetContract: transferAddressDest,
+                    amount: tokenAmount,
+                };
+
+                let message = ethers.utils.solidityKeccak256(
+                    ['address', 'uint', 'address', 'address', 'uint'],
+                    [Req.from, Req.srcChain, Req.recAddress, Req.targetContract, Req.amount]
+                );
+
+                let signer = provider.getSigner();
+                const arrayifyMessage = await ethers.utils.arrayify(message);
+                const flatSignature = await signer.signMessage(arrayifyMessage);
+
+                fetch("http://localhost:8000/postBurn", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        reqStruct: Req,
+                        signature: flatSignature
+                    }),
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8"
+                    }
+                })
+                    .then((res) => res.json())
+                setStatus("transaction started");
             }
-
-            let message = ethers.utils.solidityKeccak256(
-                ['address', 'uint', 'address', 'address', 'uint'],
-                [Req.from, Req.srcChain, Req.recAddress, Req.targetContract, Req.amount]
-            );
-
-            let signer = prov.getSigner();
-            const arrayifyMessage = await ethers.utils.arrayify(message)
-            const flatSignature = await signer.signMessage(arrayifyMessage)
-
-            fetch("http://localhost:8000/postBurn", {
-                method: "POST",
-                body: JSON.stringify({
-                    reqStruct: Req,
-                    signature: flatSignature
-                }),
-                headers: {
-                    "Content-type": "application/json; charset=UTF-8"
-                }
-            })
-                .then((res) => res.json())
-            setStatus("transaction started")
-        }
-        } catch {}
+        } catch { }
     }
 
     transferContractDestGoerli.on("Claim", async () => {
         try {
-            setStatus("transaction completed")
-        } catch {}
+            setStatus("transaction completed");
+            getBalance();
+        } catch { }
     })
     transferContractDestBNBTestnet.on("Claim", async () => {
         try {
-            setStatus("transaction completed")
-        } catch {}
+            setStatus("transaction completed");
+            getBalance();
+        } catch { }
     })
 
     const init = async () => {
         try {
-            fetch("http://localhost:8000/init")
-        } catch {}
+            fetch("http://localhost:8000/init");
+        } catch { }
     }
 
     window.ethereum.on('networkChanged', function () {
@@ -124,19 +126,19 @@ function App() {
 
     const setNetwork = async (t) => {
         try {
-            let prov = new ethers.providers.Web3Provider(window.ethereum);
-            let currentChain = ((await prov.getNetwork()).chainId)
+            let provider = new ethers.providers.Web3Provider(window.ethereum);
+            let currentChain = ((await provider.getNetwork()).chainId);
             if (currentChain === 5) {
-                transferContractSrc = new ethers.Contract(protocol2AddressGoerli, Protocol2, prov);
+                transferContractSrc = new ethers.Contract(transferAddressGoerli, TransferContract, provider);
                 setCurrentNetwork("Görli");
             }
             else if (currentChain === 97) {
-                transferContractSrc = new ethers.Contract(protocol2AddressBNBTestnet, Protocol2, prov);
+                transferContractSrc = new ethers.Contract(transferAddressBNBTestnet, TransferContract, provider);
                 setCurrentNetwork("BNB Testnet");
             }
-            const account = (await prov.send('eth_requestAccounts'))[0];
-            setSender(account)
-        } catch {}
+            const account = (await provider.send('eth_requestAccounts'))[0];
+            setSender(account);
+        } catch { }
     }
 
     window.ethereum.on('accountsChanged', function () {
@@ -145,35 +147,35 @@ function App() {
 
     const callSetAcc = async (t) => {
         try {
-            let prov = new ethers.providers.Web3Provider(window.ethereum);
-            const account = (await prov.send('eth_requestAccounts'))[0];
-            setSender(account)
-        } catch {}
+            let provider = new ethers.providers.Web3Provider(window.ethereum);
+            const account = (await provider.send('eth_requestAccounts'))[0];
+            setSender(account);
+        } catch { }
     };
 
     const callSetDestChain = async (t) => {
         try {
             if (document.getElementById("chains").value === "goerli") {
-                protocol2AddressDest = protocol2AddressGoerli;
+                transferAddressDest = transferAddressGoerli;
                 transferContractDest = transferContractDestGoerli;
             }
             else if (document.getElementById("chains").value === "bnb_testnet") {
-                protocol2AddressDest = protocol2AddressBNBTestnet;
+                transferAddressDest = transferAddressBNBTestnet;
                 transferContractDest = transferContractDestBNBTestnet;
             }
-        } catch {}
+        } catch { }
     }
 
     const setSenderAsRecipient = async (t) => {
-        document.getElementById("destAddr").value = sender
-        setRecipientAddress(sender)
+        document.getElementById("destAddr").value = sender;
+        setRecipientAddress(sender);
     };
 
     const callSetRecipientAddress = async (t) => {
-        setStatus("setRec")
+        setStatus("setRec");
         let address = document.getElementById("destAddr").value;
-        address = ethers.utils.getAddress(address)
-        setRecipientAddress(address)
+        address = ethers.utils.getAddress(address);
+        setRecipientAddress(address);
     }
 
 
@@ -188,9 +190,6 @@ function App() {
                         <br />
                         {sender}
                     </label>
-                    <button className="button" type="submit" onClick={callSetAcc}>
-                        Reload source address
-                    </button>
                 </form>
             </div>
 
@@ -219,7 +218,7 @@ function App() {
                 </div>
 
                 {/* destination address */}
-                <div className="row" style={{ "width": "76vw" }}>
+                <div className="row" style={{ "width": "71vw" }}>
                     <div class="box">
                         <form className="form" style={{ "float": "left" }}>
                             <label>
@@ -270,7 +269,7 @@ function App() {
                 </div>
 
                 {/* start transaction button */}
-                <div className="row" style={{ "width": "70vw" }}>
+                <div className="row" style={{ "width": "67vw" }}>
                     <form className="form" style={{ "float": "left" }}>
                         <button className="button" onClick={startTransaction} style={{ "width": "300px" }} type="button">
                             Start Transaction
@@ -285,6 +284,7 @@ function App() {
                     </form>
                 </div>
 
+                {/*current balances*/}
                 <div className="row" style={{ "width": "80vw" }}>
                     <div class="box">
                         <form className="form" style={{ "float": "left" }}>
@@ -303,7 +303,7 @@ function App() {
                         </form>
                         <br />
                         <form className="form" style={{ "float": "left" }}>
-                            <button className="button" onClick={getBalance} style={{"width": "300px"}} type="button">
+                            <button className="button" onClick={getBalance} style={{ "width": "300px" }} type="button">
                                 Get Balance
                             </button>
                         </form>
