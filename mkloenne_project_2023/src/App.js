@@ -16,10 +16,10 @@ const providerBNBTestnet = new ethers.providers.WebSocketProvider("wss://go.getb
 
 // Contract addresses of the deployed smart contract
 // for Görli
-const protocol2AddressGoerli = "0x4ADA1d5f84f374E2496e0AA537373D5f3853bE78"
+const protocol2AddressGoerli = "0x724f1ba0eDdf17DfE025aBAA245c5d897b2000e2"
 
 // for BNB Testnet
-const protocol2AddressBNBTestnet = "0x8ebD4A32960D9e255b083A18030B4B3C58D01263"
+const protocol2AddressBNBTestnet = "0x40D281C3E826D08098775a792728fdf10A81640E"
 
 const transferContractDestGoerli = new ethers.Contract(protocol2AddressGoerli, Protocol2, providerGoerli)
 const transferContractDestBNBTestnet = new ethers.Contract(protocol2AddressBNBTestnet, Protocol2, providerBNBTestnet)

@@ -1,6 +1,9 @@
 const Web3 = require("web3")
 const ethers = require("ethers")
 
+require('dotenv').config();
+const { PRIVATE_10, CONTRACT_ADDRESS_BNBTESTNET, CONTRACT_ADDRESS_GOERLI } = process.env;
+
 const OracleTxInclusionVerifier = [
     {
       "inputs": [
@@ -117,15 +120,15 @@ const OracleTxInclusionVerifier = [
 
 const web3 = new Web3(new Web3.providers.HttpProvider('https://goerli.infura.io/v3/2e342128028646b9b9ea1ef796849e23'));
 const provider = new ethers.providers.Web3Provider(web3.currentProvider);
-const signer = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", provider)
+const signer = new ethers.Wallet(PRIVATE_10, provider)
 
 const web3BNBTestnet = new Web3(new Web3.providers.HttpProvider('https://data-seed-prebsc-1-s1.binance.org:8545'))
 const providerBNBTestnet = new ethers.providers.WebSocketProvider("wss://go.getblock.io/8e10fd3fdea94028b9601386ef306bda");
-const signerBNBTestnet = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", providerBNBTestnet)
+const signerBNBTestnet = new ethers.Wallet(PRIVATE_10, providerBNBTestnet)
 
-const oracleAddressGoerli = "0x2e04289aC656ad2AacEe244beffE7aAec20778DE"
+const oracleAddressGoerli = CONTRACT_ADDRESS_GOERLI
 
-const oracleAddressBNBTestnet = "0xf28056ac8A93eb5eA9C0864940dD21675BfE85d8"
+const oracleAddressBNBTestnet = CONTRACT_ADDRESS_BNBTESTNET
 
 const oracleContractGoerli = new ethers.Contract(oracleAddressGoerli, OracleTxInclusionVerifier, signer);
 const oracleContractBNBTestnet = new ethers.Contract(oracleAddressBNBTestnet, OracleTxInclusionVerifier, signerBNBTestnet);
@@ -197,7 +200,7 @@ async function startOracleGoerli(blockHash, chainID){
         return;
     }
     map.set(blockHash, true);
-    await oracleContractGoerli.fromOracle(transactionVerified, blockHash);
+    await oracleContractGoerli.fromOracle(transactionVerified, blockHash, { gasLimit: 5000000 });
     console.log("Response sent (Görli)");
 }
 
@@ -235,7 +238,7 @@ async function startOracleBNBTestnet(blockHash, chainID){
         return;
     }
     map.set(blockHash, true);
-    await oracleContractBNBTestnet.fromOracle(transactionVerified, blockHash);
+    await oracleContractBNBTestnet.fromOracle(transactionVerified, blockHash, { gasLimit: 5000000 });
     console.log("Response sent (BNBTestnet)");
     transactionVerified = false;
 }
