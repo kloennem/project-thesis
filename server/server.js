@@ -556,11 +556,11 @@ const web3BNBTestnet = new Web3(new Web3.providers.HttpProvider('https://data-se
 const providerBNBTestnet = new ethers.providers.WebSocketProvider("wss://go.getblock.io/8e10fd3fdea94028b9601386ef306bda");
 const signerBNBTestnet = new ethers.Wallet("2fadd9cc155f1563ff21d0be10036d4f15a325a77e8e1ccde22e62e4bb5dea78", providerBNBTestnet);
 
-const transferAddressGoerli = "0x545DB59ADE84e2596D9CDF21B62B4d5A0C500a5a";
-const oracleAddressGoerli = "0x1F9EE6a3952f917f120A9e9AbD9d691ea7B74Cd5";
+const transferAddressGoerli = "0xCBb2BA7b2eB4723c6174cfAA6158B82728D28311";
+const oracleAddressGoerli = "0x4ac4772Dce7450fd40145d69bDcC22e4c6597E90";
 
-const transferAddressBNBTestnet = "0xedc7f92E5E011Bb6bF451E1999355106DE7FDD02";
-const oracleAddressBNBTestnet = "0xab6998e9486D865Da2E64009722AdF5396806272";
+const transferAddressBNBTestnet = "0x2e1efFA9909b34FfD4aDA206B13D067d49d1fE59";
+const oracleAddressBNBTestnet = "0x79781CC4Ab9575ba9Dc3AD8D03358aa631Cd9958";
 
 const transferContractGoerli = new ethers.Contract(transferAddressGoerli, TransferContract, signerGoerli);
 const oracleContractGoerli = new ethers.Contract(oracleAddressGoerli, OracleTxInclusionVerifier, signerGoerli);

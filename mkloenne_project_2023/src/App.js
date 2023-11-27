@@ -16,10 +16,10 @@ const providerBNBTestnet = new ethers.providers.WebSocketProvider("wss://go.getb
 
 // Contract addresses of the deployed smart contract
 // for Görli
-const transferAddressGoerli = "0x545DB59ADE84e2596D9CDF21B62B4d5A0C500a5a";
+const transferAddressGoerli = "0xCBb2BA7b2eB4723c6174cfAA6158B82728D28311";
 
 // for BNB Testnet
-const transferAddressBNBTestnet = "0xedc7f92E5E011Bb6bF451E1999355106DE7FDD02";
+const transferAddressBNBTestnet = "0x2e1efFA9909b34FfD4aDA206B13D067d49d1fE59";
 
 const transferContractDestGoerli = new ethers.Contract(transferAddressGoerli, TransferContract, providerGoerli);
 const transferContractDestBNBTestnet = new ethers.Contract(transferAddressBNBTestnet, TransferContract, providerBNBTestnet);
@@ -167,12 +167,13 @@ function App() {
     }
 
     const setSenderAsRecipient = async (t) => {
+        setStatus("Recipient Address set");
         document.getElementById("destAddr").value = sender;
         setRecipientAddress(sender);
     };
 
     const callSetRecipientAddress = async (t) => {
-        setStatus("setRec");
+        setStatus("Recipient Address set");
         let address = document.getElementById("destAddr").value;
         address = ethers.utils.getAddress(address);
         setRecipientAddress(address);
@@ -186,7 +187,7 @@ function App() {
             <div className="row" style={{ "width": "40vw" }}>
                 <form className="form">
                     <label>
-                        Source address:
+                        Source Address:
                         <br />
                         {sender}
                     </label>
@@ -207,7 +208,7 @@ function App() {
                         </form>
                         <form className="form" style={{ "float": "right" }}>
                             <label>
-                                Choose destination Blockchain:
+                                Choose Destination Blockchain:
                             </label>
                             <select name="chains" id="chains" style={{ "width": "300px" }} onChange={callSetDestChain}>
                                 <option selected="selected" value="goerli">Görli</option>
@@ -218,11 +219,11 @@ function App() {
                 </div>
 
                 {/* destination address */}
-                <div className="row" style={{ "width": "71vw" }}>
+                <div className="row" style={{ "width": "76vw" }}>
                     <div class="box">
                         <form className="form" style={{ "float": "left" }}>
                             <label>
-                                Set destination address:
+                                Set Destination Address:
                             </label>
                             <input
                                 className="input"
@@ -233,11 +234,11 @@ function App() {
                             />
                         </form>
                         <button className="button" type="submit" onClick={setSenderAsRecipient} style={{ "float": "right" }}>
-                            Same as source address
+                            Same as Source Address
                         </button>
                         <br />
                         <button className="button" type="submit" onClick={callSetRecipientAddress} style={{ "float": "right" }}>
-                            Submit destination address
+                            Submit Destination Address
                         </button>
                     </div>
                 </div>
@@ -247,7 +248,7 @@ function App() {
                     <div class="box">
                         <form className="form" style={{ "float": "left" }}>
                             <label>
-                                Set token type:
+                                Set Token Type:
                             </label>
                             <select name="token_type" style={{ "width": "300px" }}>
                                 <option selected="selected" value="example token">Example Token</option>
@@ -255,7 +256,7 @@ function App() {
                         </form>
                         <form className="form" style={{ "float": "left" }}>
                             <label>
-                                Set token amount to be sent:
+                                Set Token Amount to be sent:
                             </label>
                             <input
                                 className="input"
@@ -269,7 +270,7 @@ function App() {
                 </div>
 
                 {/* start transaction button */}
-                <div className="row" style={{ "width": "67vw" }}>
+                <div className="row" style={{ "width": "69vw" }}>
                     <form className="form" style={{ "float": "left" }}>
                         <button className="button" onClick={startTransaction} style={{ "width": "300px" }} type="button">
                             Start Transaction
@@ -277,7 +278,7 @@ function App() {
                     </form>
                     <form className="form" style={{ "float": "left" }}>
                         <label>
-                            transfer status:
+                            Transfer Status:
                             <br />
                             {status}
                         </label>
@@ -289,14 +290,14 @@ function App() {
                     <div class="box">
                         <form className="form" style={{ "float": "left" }}>
                             <label>
-                                amount of tokens of source address on source chain:
+                                Amount of Tokens of Source Address on Source Chain:
                                 <br />
                                 {balanceSenderField}
                             </label>
                         </form>
                         <form className="form" style={{ "float": "left" }}>
                             <label>
-                                amount of tokens of destination address on destination chain:
+                                Amount of Tokens of Destination Address on Destination Chain:
                                 <br />
                                 {balanceReceiverField}
                             </label>
